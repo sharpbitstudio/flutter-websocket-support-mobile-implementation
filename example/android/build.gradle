@@ -1,0 +1,36 @@
+buildscript {
+    ext {
+        android_build_gradle_version = '4.0.0'
+    }
+    repositories {
+        google()
+        jcenter()
+    }
+
+    dependencies {
+        classpath "com.android.tools.build:gradle:$android_build_gradle_version"
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        jcenter()
+    }
+}
+
+rootProject.buildDir = '../build'
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+subprojects {
+    project.evaluationDependsOn(':app')
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
+
+wrapper {
+    distributionUrl = 'https://services.gradle.org/distributions/gradle-6.4-all.zip'
+}
