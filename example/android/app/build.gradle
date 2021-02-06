@@ -26,7 +26,7 @@ apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 ext {
     // java desugar
-    desugar_jdk_libs_version = '1.0.5'
+    desugar_jdk_libs_version = '1.0.9'
 }
 
 android {

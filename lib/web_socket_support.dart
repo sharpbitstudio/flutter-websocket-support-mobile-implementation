@@ -57,8 +57,14 @@ class WebSocketClient extends WebSocketSupportPlatform {
   /// Initialize ws connection close by client.
   /// When connection is successfully closed, [onWsClosed] will be invoked.
   @override
-  Future<void> disconnect() async {
-    return await WebSocketSupportPlatform.instance.disconnect();
+  Future<void> disconnect({
+    int code = 1000,
+    String reason = 'Client done.',
+  }) async {
+    return await WebSocketSupportPlatform.instance.disconnect(
+      code: code,
+      reason: reason,
+    );
   }
 }
 

@@ -54,9 +54,16 @@ void main() {
     });
 
     test('disconnect', () async {
+      await _webSocketSupport.disconnect(code: 123, reason: 'test reason');
+      // verify
+      verify(_mockedWebSocket.disconnect(code: 123, reason: 'test reason'));
+      verifyNoMoreInteractions(_mockedWebSocket);
+    });
+
+    test('disconnect default values', () async {
       await _webSocketSupport.disconnect();
       // verify
-      verify(_mockedWebSocket.disconnect());
+      verify(_mockedWebSocket.disconnect(code: 1000, reason: 'Client done.'));
       verifyNoMoreInteractions(_mockedWebSocket);
     });
   });

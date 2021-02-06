@@ -7,8 +7,8 @@ import java.util.function.Consumer;
 
 public class WebSocketStreamHandler implements StreamHandler {
 
-  private BiConsumer<Object, EventSink> onListenConsumer;
-  private  Consumer<Object> onCancelConsumer;
+  private final BiConsumer<Object, EventSink> onListenConsumer;
+  private final Consumer<Object> onCancelConsumer;
 
 
   public WebSocketStreamHandler(BiConsumer<Object, EventSink> onListenConsumer,

@@ -15,6 +15,8 @@ public class Constants {
   public static final String OUT_METHOD_NAME_ON_BYTE_MSG = "onByteMessage";
 
   // method arguments
+  public static final String ARGUMENT_CODE = "code";
+  public static final String ARGUMENT_REASON = "reason";
   public static final String ARGUMENT_URL = "serverUrl";
   public static final String ARGUMENT_OPTIONS = "options";
   public static final String ARGUMENT_TEXT_MESSAGE = "textMessage";

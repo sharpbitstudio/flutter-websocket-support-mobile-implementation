@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        android_build_gradle_version = '4.0.0'
+        android_build_gradle_version = '4.1.2'
     }
     repositories {
         google()

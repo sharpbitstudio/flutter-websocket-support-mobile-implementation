@@ -5,6 +5,7 @@ buildscript {
   ext {
     android_build_gradle_version = '4.0.0'
     ben_manes_version = '0.28.0'
+    junit_version = '1.7.0.0'
   }
   repositories {
     google()
@@ -13,16 +14,21 @@ buildscript {
   dependencies {
     classpath "com.android.tools.build:gradle:$android_build_gradle_version"
     classpath "com.github.ben-manes:gradle-versions-plugin:$ben_manes_version"
+    classpath "de.mannodermaus.gradle.plugins:android-junit5:$junit_version"
   }
 }
 
 ext {
   lifecycle_version = "2.2.0"
-  okhttp_version = '4.7.2'
+  okhttp_version = '4.9.1'
   lombok_version = '1.18.12'
 
   // java desugar
-  desugar_jdk_libs_version = '1.0.5'
+  desugar_jdk_libs_version = '1.1.1'
+
+  // junit
+  junit_version = '5.7.0'
+  mockito_version = '3.7.7'
 }
 
 rootProject.allprojects {
@@ -34,6 +40,7 @@ rootProject.allprojects {
 
 apply plugin: 'com.android.library'
 apply plugin: "com.github.ben-manes.versions"
+apply plugin: "de.mannodermaus.android-junit5"
 
 android {
   compileSdkVersion 29
@@ -50,6 +57,12 @@ android {
   lintOptions {
     disable 'InvalidPackage'
   }
+  testOptions {
+    // 5) Configure JUnit 5, if necessary
+    junitPlatform {
+      // Configuration goes here!
+    }
+  }
 }
 
 dependencies {
@@ -59,6 +72,11 @@ dependencies {
   // lombok
   compileOnly "org.projectlombok:lombok:$lombok_version"
   annotationProcessor "org.projectlombok:lombok:$lombok_version"
+
+  // tests
+  testImplementation "org.junit.jupiter:junit-jupiter-api:$junit_version"
+  testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junit_version"
+  testImplementation group: 'org.mockito', name: 'mockito-inline', version: mockito_version
 }
 
 dependencyUpdates {
