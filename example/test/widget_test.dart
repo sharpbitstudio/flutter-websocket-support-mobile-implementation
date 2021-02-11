@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
@@ -26,7 +25,8 @@ void main() {
     );
   }
 
-  testWidgets('Verify connect and send operations', (WidgetTester tester) async {
+  testWidgets('Verify connect and send operations',
+      (WidgetTester tester) async {
     var app = WebSocketSupportExampleApp();
     var backend = WsBackend();
     var mockedWs = WebSocketSupportMock(); // mocked websocket support
@@ -43,7 +43,8 @@ void main() {
       return Future<void>.value(null);
     });
     when(mockedWs.sendMessage()).thenAnswer((realInvocation) {
-      backend.addMesage(ServerMessage(backend.textController.text, DateTime.now()));
+      backend.addMesage(
+          ServerMessage(backend.textController.text, DateTime.now()));
       mockedWs.notifyListeners();
     });
 
