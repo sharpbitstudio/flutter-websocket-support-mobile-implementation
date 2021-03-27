@@ -1,4 +1,4 @@
-package tech.sharpbitstudio.web_socket_support;
+package tech.sharpbitstudio.web_socket_support.domain;
 
 public class Constants {
 

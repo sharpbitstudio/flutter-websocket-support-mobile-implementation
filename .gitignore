@@ -6,3 +6,9 @@
 
 build/
 .idea/
+
+# Coverage directory used by tools like istanbul
+coverage
+
+# Coverage execution from jacoco
+jacoco.exec

@@ -1,6 +1,6 @@
 package tech.sharpbitstudio.web_socket_support.domain;
 
-import android.util.ArrayMap;
+import androidx.collection.ArrayMap;
 import java.io.Serializable;
 import java.util.Map;
 import lombok.Builder;

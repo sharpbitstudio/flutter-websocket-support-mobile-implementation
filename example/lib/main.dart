@@ -203,7 +203,7 @@ class WsControlPanel extends StatelessWidget {
                 ),
                 Padding(
                   padding: const EdgeInsets.only(left: 10, right: 10),
-                  child: RaisedButton(
+                  child: ElevatedButton(
                     key: Key('connect'),
                     onPressed: ws.working
                         ? null

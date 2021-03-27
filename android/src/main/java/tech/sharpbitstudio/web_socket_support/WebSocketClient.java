@@ -1,18 +1,17 @@
 package tech.sharpbitstudio.web_socket_support;
 
-import static tech.sharpbitstudio.web_socket_support.Constants.ARGUMENT_BYTE_MESSAGE;
-import static tech.sharpbitstudio.web_socket_support.Constants.ARGUMENT_CODE;
-import static tech.sharpbitstudio.web_socket_support.Constants.ARGUMENT_OPTIONS;
-import static tech.sharpbitstudio.web_socket_support.Constants.ARGUMENT_REASON;
-import static tech.sharpbitstudio.web_socket_support.Constants.ARGUMENT_TEXT_MESSAGE;
-import static tech.sharpbitstudio.web_socket_support.Constants.ARGUMENT_URL;
-import static tech.sharpbitstudio.web_socket_support.Constants.IN_METHOD_NAME_CONNECT;
-import static tech.sharpbitstudio.web_socket_support.Constants.IN_METHOD_NAME_DISCONNECT;
-import static tech.sharpbitstudio.web_socket_support.Constants.IN_METHOD_NAME_SEND_BYTE_MSG;
-import static tech.sharpbitstudio.web_socket_support.Constants.IN_METHOD_NAME_SEND_TEXT_MSG;
-import static tech.sharpbitstudio.web_socket_support.Constants.METHOD_PLATFORM_VERSION;
-import static tech.sharpbitstudio.web_socket_support.Constants.OUT_METHOD_NAME_ON_BYTE_MSG;
-import static tech.sharpbitstudio.web_socket_support.Constants.OUT_METHOD_NAME_ON_TEXT_MSG;
+import static tech.sharpbitstudio.web_socket_support.domain.Constants.ARGUMENT_BYTE_MESSAGE;
+import static tech.sharpbitstudio.web_socket_support.domain.Constants.ARGUMENT_CODE;
+import static tech.sharpbitstudio.web_socket_support.domain.Constants.ARGUMENT_OPTIONS;
+import static tech.sharpbitstudio.web_socket_support.domain.Constants.ARGUMENT_REASON;
+import static tech.sharpbitstudio.web_socket_support.domain.Constants.ARGUMENT_TEXT_MESSAGE;
+import static tech.sharpbitstudio.web_socket_support.domain.Constants.ARGUMENT_URL;
+import static tech.sharpbitstudio.web_socket_support.domain.Constants.IN_METHOD_NAME_CONNECT;
+import static tech.sharpbitstudio.web_socket_support.domain.Constants.IN_METHOD_NAME_DISCONNECT;
+import static tech.sharpbitstudio.web_socket_support.domain.Constants.IN_METHOD_NAME_SEND_BYTE_MSG;
+import static tech.sharpbitstudio.web_socket_support.domain.Constants.IN_METHOD_NAME_SEND_TEXT_MSG;
+import static tech.sharpbitstudio.web_socket_support.domain.Constants.OUT_METHOD_NAME_ON_BYTE_MSG;
+import static tech.sharpbitstudio.web_socket_support.domain.Constants.OUT_METHOD_NAME_ON_TEXT_MSG;
 
 import android.os.Handler;
 import android.util.Log;
@@ -163,12 +162,13 @@ public class WebSocketClient extends WebSocketListener implements MethodCallHand
   @Override
   public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t,
       @Nullable Response response) {
-    Log.e(TAG, "Error occurred on ws channel. Error:" + t.getMessage());
+    Log.e(TAG, "Error occurred on ws channel. Error:" + t.getMessage() + ". Response:" + response);
     mainThreadHandler.post(() -> {
-      methodChannel.invokeMethod(SystemEventType.WS_FAILURE.getMethodName(),
-          SystemEventContext.builder().throwableType(t.getClass().getSimpleName())
-              .errorMessage(t.getMessage())
-              .causeMessage(t.getCause() != null ? t.getCause().toString() : null).build().toMap());
+      final Map<String, Object> context = SystemEventContext.builder()
+          .throwableType(t.getClass().getSimpleName())
+          .errorMessage(t.getMessage())
+          .causeMessage(t.getCause() != null ? t.getCause().toString() : null).build().toMap();
+      methodChannel.invokeMethod(SystemEventType.WS_FAILURE.getMethodName(), context);
       cleanUpOnClose();
     });
   }
@@ -185,10 +185,6 @@ public class WebSocketClient extends WebSocketListener implements MethodCallHand
   public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
 
     switch (call.method) {
-      case METHOD_PLATFORM_VERSION: {
-        result.success("Android " + android.os.Build.VERSION.RELEASE);
-        return;
-      }
 
       // connect
       case IN_METHOD_NAME_CONNECT: {
@@ -222,6 +218,7 @@ public class WebSocketClient extends WebSocketListener implements MethodCallHand
           result.success(null);
         } else {
           // TODO: error code should be reconsidered
+          Log.e(TAG, "Unable to send text message to Ws server!");
           result.error("01", "Unable to send text message!", null);
         }
         break;
@@ -234,13 +231,15 @@ public class WebSocketClient extends WebSocketListener implements MethodCallHand
           result.success(null);
         } else {
           // TODO: error code should be reconsidered
-          result.error("02", "Unable to send text message!", null);
+          Log.e(TAG, "Unable to send binary message to Ws server!");
+          result.error("02", "Unable to send binary message!", null);
         }
         break;
       }
 
       // if unexpected (all non specified methods)
       default:
+        Log.w(TAG, "Unexpected MethodCall: " + call.method);
         result.notImplemented();
     }
   }
@@ -248,6 +247,7 @@ public class WebSocketClient extends WebSocketListener implements MethodCallHand
   public void terminate() {
     // TODO
     this.methodChannel.setMethodCallHandler(null);
+    Log.i(TAG, "WebSocketClient terminated.");
   }
 
   /// PRIVATE

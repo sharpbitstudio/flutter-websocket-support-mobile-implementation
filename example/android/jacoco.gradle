@@ -1,0 +1,91 @@
+apply plugin: 'jacoco'
+
+jacoco {
+    toolVersion = "0.8.6"
+}
+
+private static boolean isAndroidModule(Project project) {
+    boolean isAndroidLibrary = project.plugins.hasPlugin('com.android.library')
+    boolean isAndroidApp = project.plugins.hasPlugin('com.android.application')
+    return isAndroidLibrary || isAndroidApp
+}
+
+afterEvaluate { project ->
+    if (isAndroidModule(project)) setupAndroidReporting()
+    else setupKotlinReporting()
+}
+
+def setupKotlinReporting() {
+    jacocoTestReport {
+        dependsOn test
+        reports {
+            csv.enabled false // change if needed
+            xml.enabled false // change if needed
+            html {
+                enabled true
+                destination file("${buildDir}/coverage-report")
+            }
+        }
+    }
+}
+
+def setupAndroidReporting() {
+
+    tasks.withType(Test) {
+        // Whether or not classes without source location should be instrumented
+        jacoco {
+            includeNoLocationClasses true
+            excludes = ['jdk.internal.*'] // see related issue https://github.com/gradle/gradle/issues/5184#issuecomment-457865951
+        }
+    }
+
+    task jacocoTestReport (
+            type: JacocoReport,
+            group: 'reporting',
+            description: 'Generate Jacoco report',
+            dependsOn: ['testDebugUnitTest']
+    ) {
+        reports {
+            csv.enabled false
+            xml.enabled true
+            html {
+                enabled true
+                destination file("${buildDir}/coverage-report")
+            }
+        }
+
+        // Change as needed
+        def fileFilter = [
+            '**/*App.*',
+            '**/*Application.*',
+            '**/*Activity.*',
+            '**/*Fragment.*',
+            '**/*JsonAdapter.*',
+            '**/di/**',
+            '**/*Dagger.*',
+            '**/BuildConfig.*',
+            // project specific
+            '**/web_socket_support/domain/**',
+        ]
+
+        // java compiled classes
+        def javaTree = fileTree(dir: "$buildDir/intermediates/javac/debug/classes", excludes: fileFilter)
+        classDirectories.from = files([javaTree])
+
+        // sources
+        def mainSrc = "$projectDir/src/main/java"
+        sourceDirectories.from = files([mainSrc])
+
+        // execution
+        executionData.from = fileTree(
+            dir: project.buildDir,
+            includes: [
+                'jacoco/testDebugUnitTest.exec',
+            ]
+        )
+    }
+
+    // add jacoco tests on assembleRelease
+    // this is used for android coverage in github actions
+    tasks.assembleRelease.dependsOn jacocoTestReport
+}

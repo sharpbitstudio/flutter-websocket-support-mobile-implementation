@@ -15,6 +15,4 @@ public enum SystemEventType {
   SystemEventType(String methodName) {
     this.methodName = methodName;
   }
-
-
 }
