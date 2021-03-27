@@ -1,0 +1,60 @@
+name: web_socket_support_mobile_implementation
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the develop branch
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # Job configuration for the web_socket_support flutter build (Mobile Implementation Package)
+  mobile_implementation_build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      
+      # Make sure the stable version of Flutter is available
+      - uses: subosito/flutter-action@v1
+        with:
+          channel: 'stable' # or: 'beta' or 'dev'
+
+      # Download all Flutter packages the web_socket_support depends on
+      - name: Download dependencies
+        run: flutter pub get
+
+      # Run Flutter Format to ensure formatting is valid
+      - name: Run Flutter Format
+        run: flutter format --set-exit-if-changed lib
+
+      # Run Flutter Analyzer
+      - name: Run Flutter Analyzer
+        run: flutter analyze
+
+      # Run all unit-tests with code coverage
+      - name: Run unit tests
+        run: flutter test --coverage
+
+      # Build Android version of the example app
+      - name: Run Android build
+        run: flutter build apk --release
+        working-directory: ./example
+
+      # Build iOS version of the example app
+      # - name: Run iOS build
+      #  run: flutter build ios --release --no-codesign
+      #  working-directory: ./example
+
+      # Upload code coverage information for flutter
+      - uses: codecov/codecov-action@v1
+        with:
+          files: ./coverage/lcov.info,./example/build/web_socket_support/reports/jacoco/jacocoTestReport/jacocoTestReport.xml
+          name: WebSocketSupport (Mobile Implementation) # optional
+          fail_ci_if_error: true
