@@ -32,5 +32,8 @@ _webSocketConnection.sendTextMessage('Hello from Websocket support');
 
 or see /example/lib/main.dart
 
+## TODO
+Unfortunately, iOS implementation is still missing. So, if you know-how and willing to implement it - you will be more than welcomed. Preffered WebSocket libs are [NWWebSocket](https://github.com/pusher/NWWebSocket) and [Starscream](https://github.com/daltoniam/Starscream).
+
 ## Contributing
 See the Contributing guide for details on contributing to this project.
