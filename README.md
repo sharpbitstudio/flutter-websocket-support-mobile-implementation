@@ -1,4 +1,5 @@
 # Websocket support
+[![pub package](https://img.shields.io/pub/v/web_socket_support.svg)](https://pub.dartlang.org/packages/geolocator) [![build](https://github.com/sharpbitstudio/flutter-websocket-support-mobile-implementation/actions/workflows/web_socket_support.yaml/badge.svg?branch=master)](https://github.com/sharpbitstudio/flutter-websocket-support-mobile-implementation/actions/workflows/web_socket_support.yaml) [![codecov](https://codecov.io/gh/sharpbitstudio/flutter-websocket-support-mobile-implementation/branch/master/graph/badge.svg?token=UK2F6LLRRV)](https://codecov.io/gh/sharpbitstudio/flutter-websocket-support-mobile-implementation)
 
 A Flutter plugin for websockets on Android (currently). This plugin is based on okHttp (for Android platform).
 
