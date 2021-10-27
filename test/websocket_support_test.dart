@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:async/async.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:web_socket_support/web_socket_support.dart';
@@ -14,33 +14,22 @@ import 'package:web_socket_support_platform_interface/web_socket_listener.dart';
 import 'package:web_socket_support_platform_interface/web_socket_options.dart';
 import 'package:web_socket_support_platform_interface/web_socket_support_platform_interface.dart';
 
+import 'event_channel_mock.dart';
+import 'method_channel_mock.dart';
+import 'websocket_support_test.mocks.dart';
+
+@GenerateMocks([WebSocketListener])
 void main() {
-  final WebSocketListener _mockListener = MockWebSocketListener();
+  TestWidgetsFlutterBinding.ensureInitialized();
 
   group('$WebSocketClient', () {
-    WidgetsFlutterBinding.ensureInitialized();
-
-    //
-    // mock channels
-    WebSocketClient _webSocketClient;
-    MethodChannelWebSocketSupport _mockedWebSocket;
-
-    setUp(() {
-      // init variables
-      _mockedWebSocket = MockMethodChannelWebSocketSupport();
-      _webSocketClient = WebSocketClient.private(_mockedWebSocket);
-    });
-
-    test('listener is NOT DummyWebSocketListener', () async {
-      await _webSocketClient.connect(
-        'ws://example.com/',
-        options: WebSocketOptions(),
-      );
-      // verify
+    test('listener can not be DummyWebSocketListener', () async {
+      // verify no DummyWebSocketListener can be used
       expect(
-          (WebSocketSupportPlatform.instance as MethodChannelWebSocketSupport)
-              .listener,
-          isNot(isA<DummyWebSocketListener>()));
+          () => WebSocketClient(MockDummyWebSocketListener()),
+          throwsA(predicate((e) =>
+              e is PlatformException &&
+              e.code == WebSocketClient.wrongListenerExceptionCode)));
     });
 
     test('Valid listener works', () async {
@@ -48,206 +37,334 @@ void main() {
       expect(WebSocketClient(MockWebSocketListener()), isA<WebSocketClient>());
     });
 
-    test('DummyWebSocketListener throws exception', () async {
-      // verify
-      expect(() => WebSocketClient(MockDummyWebSocketListener()),
-          throwsA(isA<PlatformException>()));
-    });
-
     test('connect', () async {
-      await _webSocketClient.connect(
-        'ws://example.com/',
-        options: WebSocketOptions(),
-      );
-      // verify
-      verify(_mockedWebSocket.connect('ws://example.com/',
-          options: anyNamed('options')));
-      verifyNoMoreInteractions(_mockedWebSocket);
-    });
+      final _mockedWsListener = MockWebSocketListener();
+      final _webSocketClient = WebSocketClient(_mockedWsListener);
 
-    test('invalid connect', () async {
+      // Arrange
+      final _completer = Completer();
+      final _methodChannel = MethodChannelMock(
+        channelName: MethodChannelWebSocketSupport.methodChannelName,
+        methodMocks: [
+          MethodMock(
+              method: 'connect',
+              action: () {
+                _sendMessageFromPlatform(
+                    MethodChannelWebSocketSupport.methodChannelName,
+                    const MethodCall('onOpened'));
+                _completer.complete();
+              }),
+        ],
+      );
+
+      // Act
+      await _webSocketClient.connect('ws://example.com/',
+          options: const WebSocketOptions(
+            autoReconnect: true,
+          ));
+
+      // await completer
+      await _completer.future;
+
+      // Assert
+      // correct event sent to platform
       expect(
-          () => _webSocketClient.connect(
-                'ws://example.com/',
-                options: null,
-              ),
-          throwsA(isA<AssertionError>()));
+        _methodChannel.log,
+        <Matcher>[
+          isMethodCall('connect', arguments: <String, Object>{
+            'serverUrl': 'ws://example.com/',
+            'options': {
+              'autoReconnect': true,
+              'pingInterval': 0,
+              'headers': {},
+            },
+          }),
+        ],
+      );
+
+      // platform response 'onOpened' created wsConnection
+      verify(_mockedWsListener.onWsOpened(any));
+      verifyNoMoreInteractions(_mockedWsListener);
     });
 
     test('disconnect', () async {
-      await _webSocketClient.disconnect(code: 123, reason: 'test reason');
-      // verify
-      verify(_mockedWebSocket.disconnect(code: 123, reason: 'test reason'));
-      verifyNoMoreInteractions(_mockedWebSocket);
-    });
+      final _mockedWsListener = MockWebSocketListener();
+      final _webSocketClient = WebSocketClient(_mockedWsListener);
 
-    test('disconnect default values', () async {
-      await _webSocketClient.disconnect();
-      // verify
-      verify(_mockedWebSocket.disconnect(code: 1000, reason: 'Client done.'));
-      verifyNoMoreInteractions(_mockedWebSocket);
+      // Arrange
+      final _completer = Completer();
+      final _methodChannel = MethodChannelMock(
+        channelName: MethodChannelWebSocketSupport.methodChannelName,
+        methodMocks: [
+          MethodMock(
+              method: 'disconnect',
+              action: () {
+                _sendMessageFromPlatform(
+                    MethodChannelWebSocketSupport.methodChannelName,
+                    const MethodCall('onClosed', <String, Object>{
+                      'code': 123,
+                      'reason': 'test reason'
+                    }));
+                _completer.complete();
+              }),
+        ],
+      );
+
+      // Act
+      await _webSocketClient.disconnect(code: 123, reason: 'test reason');
+
+      // await completer
+      await _completer.future;
+
+      // Assert
+      // correct event sent to platform
+      expect(
+        _methodChannel.log,
+        <Matcher>[
+          isMethodCall('disconnect', arguments: <String, Object>{
+            'code': 123,
+            'reason': 'test reason',
+          }),
+        ],
+      );
+
+      // platform response 'onOpened' created wsConnection
+      verify(_mockedWsListener.onWsClosed(123, 'test reason'));
+      verifyNoMoreInteractions(_mockedWsListener);
     });
   });
 
   group('$WebSocketClient callbacks', () {
-    WidgetsFlutterBinding.ensureInitialized();
+    test('`onWsOpened` callback executed', () async {
+      final _mockedWsListener = MockWebSocketListener();
+      WebSocketClient(_mockedWsListener);
 
-    //
-    // mock channels
-    MethodChannel _methodChannel;
-    EventChannel _textMessages;
-    EventChannel _byteMessages;
-    WebSocketClient _webSocketSupport;
-    Function _methodCallFunction;
+      // action
+      // execute methodCall from platform
+      await _sendMessageFromPlatform(
+          MethodChannelWebSocketSupport.methodChannelName,
+          const MethodCall('onOpened'));
 
-    // EventChannel
-    StreamController<String> _textMessagesController;
-    StreamController<String> _onTextMessageController;
-    StreamController<Uint8List> _byteMessagesController;
-    StreamController<Uint8List> _onByteMessagesController;
-
-    // async queues
-    StreamQueue<String> _textQueue;
-    StreamQueue<Uint8List> _byteQueue;
-
-    setUp(() {
-      // init variables
-      _methodChannel = MockMethodChannel();
-      _textMessages = MockEventChannel();
-      _byteMessages = MockEventChannel();
-
-      _webSocketSupport =
-          WebSocketClient.private(MethodChannelWebSocketSupport.private(
-        _mockListener,
-        _methodChannel,
-        _textMessages,
-        _byteMessages,
-      ));
-
-      // MethodChannel
-      when(_methodChannel.setMethodCallHandler(any))
-          .thenAnswer((realInvocation) {
-        _methodCallFunction = realInvocation.positionalArguments[0];
-      });
-
-      // text EventChannel
-      _textMessagesController = StreamController<String>();
-      when(_textMessages.receiveBroadcastStream())
-          .thenAnswer((Invocation invoke) => _textMessagesController.stream);
-
-      // Byte EventChannel
-      _byteMessagesController = StreamController<Uint8List>();
-      when(_byteMessages.receiveBroadcastStream())
-          .thenAnswer((Invocation invoke) => _byteMessagesController.stream);
-
-      // stream queues for async validation
-      _onTextMessageController = StreamController<String>();
-      _onByteMessagesController = StreamController<Uint8List>();
-      _textQueue = StreamQueue(_onTextMessageController.stream);
-      _byteQueue = StreamQueue(_onByteMessagesController.stream);
-      when(_mockListener.onTextMessage(any)).thenAnswer((realInvocation) {
-        _onTextMessageController.add(realInvocation.positionalArguments[0]);
-      });
-      when(_mockListener.onByteMessage(any)).thenAnswer((realInvocation) {
-        _onByteMessagesController.add(realInvocation.positionalArguments[0]);
-      });
-    });
-
-    tearDown(() {
-      _textMessagesController.close();
-      _onTextMessageController.close();
-      _byteMessagesController.close();
-      _onByteMessagesController.close();
-    });
-
-    test('listener is NOT DummyWebSocketListener', () async {
-      await _webSocketSupport.connect(
-        'ws://example.com/',
-        options: WebSocketOptions(),
-      );
+      // verify
+      verify(_mockedWsListener.onWsOpened(any));
+      verifyNoMoreInteractions(_mockedWsListener);
       expect(
           (WebSocketSupportPlatform.instance as MethodChannelWebSocketSupport)
               .listener,
           isNot(isA<DummyWebSocketListener>()));
     });
 
-    test('onConnect', () async {
-      await _webSocketSupport.connect(
-        'ws://example.com/',
-        options: WebSocketOptions(),
-      );
-      _methodCallFunction.call(MethodCall('onOpened'));
-      verify(_mockListener.onWsOpened(any));
-      verifyNoMoreInteractions(_mockListener);
-    });
+    test('`onWsClosing` callback executed', () async {
+      final _mockedWsListener = MockWebSocketListener();
+      WebSocketClient(_mockedWsListener);
 
-    test('onClosing', () async {
-      await _webSocketSupport.connect(
-        'ws://example.com/',
-        options: WebSocketOptions(),
-      );
-      _methodCallFunction.call(MethodCall(
-        'onClosing',
-        {'code': 1, 'reason': 'testReason1'},
-      ));
-      verify(_mockListener.onWsClosing(1, 'testReason1'));
-      verifyNoMoreInteractions(_mockListener);
-    });
-
-    test('onClosed', () async {
-      await _webSocketSupport.connect(
-        'ws://example.com/',
-        options: WebSocketOptions(),
-      );
-      _methodCallFunction.call(MethodCall(
-        'onClosed',
-        {'code': 2, 'reason': 'testReason2'},
-      ));
-      verify(_mockListener.onWsClosed(2, 'testReason2'));
-      verifyNoMoreInteractions(_mockListener);
-    });
-
-    test('onTextMessage', () async {
-      await _webSocketSupport.connect(
-        'ws://example.com/',
-        options: WebSocketOptions(),
-      );
-      _textMessagesController.add('test-text-message');
+      // action
+      // execute methodCall from platform
+      await _sendMessageFromPlatform(
+          MethodChannelWebSocketSupport.methodChannelName,
+          const MethodCall('onClosing',
+              <String, Object>{'code': 234, 'reason': 'test reason 2'}));
 
       // verify
-      expect(await _textQueue.next.timeout(Duration(seconds: 1)),
-          'test-text-message');
-      verify(_mockListener.onTextMessage('test-text-message'));
-      verifyNoMoreInteractions(_mockListener);
+      verify(_mockedWsListener.onWsClosing(234, 'test reason 2'));
+      verifyNoMoreInteractions(_mockedWsListener);
     });
 
-    test('onByteMessage', () async {
-      await _webSocketSupport.connect(
-        'ws://example.com/',
-        options: WebSocketOptions(),
-      );
-      _byteMessagesController
-          .add(Uint8List.fromList('test-byte-message'.codeUnits));
+    test('`onWsClosed` callback executed', () async {
+      final _mockedWsListener = MockWebSocketListener();
+      WebSocketClient(_mockedWsListener);
+
+      // action
+      // execute methodCall from platform
+      await _sendMessageFromPlatform(
+          MethodChannelWebSocketSupport.methodChannelName,
+          const MethodCall('onClosed',
+              <String, Object>{'code': 345, 'reason': 'test reason 3'}));
 
       // verify
-      expect(await _byteQueue.next.timeout(Duration(seconds: 1)),
-          'test-byte-message'.codeUnits);
-      verify(_mockListener.onByteMessage(any));
-      verifyNoMoreInteractions(_mockListener);
+      verify(_mockedWsListener.onWsClosed(345, 'test reason 3'));
+      verifyNoMoreInteractions(_mockedWsListener);
+    });
+
+    test('`onStringMessage` callback executed', () async {
+      final _mockedWsListener = MockWebSocketListener();
+      WebSocketClient(_mockedWsListener);
+
+      // prepare
+      // text message channel mock (before we is opened)
+      final _streamController = StreamController<String>.broadcast();
+      EventChannelMock(
+        channelName: MethodChannelWebSocketSupport.textEventChannelName,
+        stream: _streamController.stream,
+      );
+
+      // open ws
+      await _sendMessageFromPlatform(
+          MethodChannelWebSocketSupport.methodChannelName,
+          const MethodCall('onOpened'));
+
+      // action
+      // emit test event
+      _streamController.add('Text message 1');
+      await _streamController.close(); // ensure message delivered
+
+      // verify
+      verify(_mockedWsListener.onWsOpened(any));
+      verify(_mockedWsListener.onStringMessage('Text message 1'));
+      verifyNoMoreInteractions(_mockedWsListener);
+    });
+
+    test('`onByteArrayMessage` callback executed', () async {
+      final _mockedWsListener = MockWebSocketListener();
+      WebSocketClient(_mockedWsListener);
+
+      // prepare
+      // byte array message channel mock (before ws is opened)
+      final _streamController = StreamController<Uint8List>.broadcast();
+      EventChannelMock(
+        channelName: MethodChannelWebSocketSupport.byteEventChannelName,
+        stream: _streamController.stream,
+      );
+
+      // open ws
+      await _sendMessageFromPlatform(
+          MethodChannelWebSocketSupport.methodChannelName,
+          const MethodCall('onOpened'));
+
+      // action
+      // emit test event
+      _streamController.add(Uint8List.fromList('Binary message 1'.codeUnits));
+      await _streamController.close(); // ensure message delivered
+
+      // verify
+      verify(_mockedWsListener.onWsOpened(any));
+      verify(_mockedWsListener.onByteArrayMessage(
+          Uint8List.fromList('Binary message 1'.codeUnits)));
+      verifyNoMoreInteractions(_mockedWsListener);
+    });
+
+    test('`onError` callback executed by method channel', () async {
+      final _mockedWsListener = MockWebSocketListener();
+      WebSocketClient(_mockedWsListener);
+
+      // action
+      // execute methodCall from platform
+      await _sendMessageFromPlatform(
+          MethodChannelWebSocketSupport.methodChannelName,
+          const MethodCall('onFailure', <String, Object>{
+            'throwableType': 'TestType',
+            'errorMessage': 'TestErrMsg',
+            'causeMessage': 'TestErrCause'
+          }));
+
+      // verify
+      final _errorMatcher = isA<WebSocketException>()
+          .having((e) => e.originType, 'throwableType', equals('TestType'))
+          .having((e) => e.message, 'errorMessage', equals('TestErrMsg'))
+          .having(
+              (e) => e.causeMessage, 'causeMessage', equals('TestErrCause'));
+
+      expect(
+          verify(_mockedWsListener
+                  .onError(captureThat(isA<WebSocketException>())))
+              .captured
+              .single,
+          _errorMatcher);
+      verifyNoMoreInteractions(_mockedWsListener);
+    });
+
+    test('`onError` callback executed by text event channel', () async {
+      final _mockedWsListener = MockWebSocketListener();
+      WebSocketClient(_mockedWsListener);
+
+      // prepare
+      // text message channel mock (before we is opened)
+      final _streamController = StreamController<String>.broadcast();
+      EventChannelMock(
+        channelName: MethodChannelWebSocketSupport.textEventChannelName,
+        stream: _streamController.stream,
+      );
+
+      // open ws
+      await _sendMessageFromPlatform(
+          MethodChannelWebSocketSupport.methodChannelName,
+          const MethodCall('onOpened'));
+
+      // action
+      // emit test error event
+      _streamController.addError(
+        PlatformException(
+            code: 'ERROR_CODE_3', message: 'errMsg3', details: null),
+      );
+      await _streamController.close();
+
+      // verify
+      final _errorMatcher = isA<PlatformException>()
+          .having((e) => e.code, 'An error code', equals('ERROR_CODE_3'))
+          .having((e) => e.message, 'error message', equals('errMsg3'));
+
+      expect(
+          verify(_mockedWsListener
+                  .onError(captureThat(isA<PlatformException>())))
+              .captured
+              .single,
+          _errorMatcher);
+      verify(_mockedWsListener.onWsOpened(any));
+      verifyNoMoreInteractions(_mockedWsListener);
+    });
+
+    test('`onError` callback executed by bytearray event channel', () async {
+      final _mockedWsListener = MockWebSocketListener();
+      WebSocketClient(_mockedWsListener);
+
+      // prepare
+      // text message channel mock (before we is opened)
+      final _streamController = StreamController<Uint8List>.broadcast();
+      EventChannelMock(
+        channelName: MethodChannelWebSocketSupport.byteEventChannelName,
+        stream: _streamController.stream,
+      );
+
+      // open ws
+      await _sendMessageFromPlatform(
+          MethodChannelWebSocketSupport.methodChannelName,
+          const MethodCall('onOpened'));
+
+      // action
+      // emit test error event
+      _streamController.addError(
+        PlatformException(
+            code: 'ERROR_CODE_4', message: 'errMsg4', details: null),
+      );
+      await _streamController.close();
+
+      // verify
+      final _errorMatcher = isA<PlatformException>()
+          .having((e) => e.code, 'An error code', equals('ERROR_CODE_4'))
+          .having((e) => e.message, 'error message', equals('errMsg4'));
+
+      expect(
+          verify(_mockedWsListener
+                  .onError(captureThat(isA<PlatformException>())))
+              .captured
+              .single,
+          _errorMatcher);
+      verify(_mockedWsListener.onWsOpened(any));
+      verifyNoMoreInteractions(_mockedWsListener);
     });
   });
 
   group('$DefaultWebSocketListener callbacks', () {
     WidgetsFlutterBinding.ensureInitialized();
 
-    var _webSocketConnection;
-    var _closedCode;
-    var _closedReason;
-    var _closingCode;
-    var _closingReason;
-    var _textMsg;
-    var _byteMsg;
-    var _exception;
+    WebSocketConnection? _webSocketConnection;
+    int? _closedCode;
+    String? _closedReason;
+    int? _closingCode;
+    String? _closingReason;
+    String? _textMsg;
+    Uint8List? _byteMsg;
+    Exception? _exception;
 
     // listener
     WebSocketListener _listener;
@@ -307,14 +424,14 @@ void main() {
 
       // test onTextMessage
       var textMsg = 'text message 1';
-      _listener.onTextMessage(textMsg);
+      _listener.onStringMessage(textMsg);
 
       // verify
       expect(_textMsg, textMsg);
 
       // test onByteMessage
-      var byteMsg = utf8.encode('text message 1');
-      _listener.onByteMessage(byteMsg);
+      var byteMsg = Uint8List.fromList(utf8.encode('text message 1'));
+      _listener.onByteArrayMessage(byteMsg);
 
       // verify
       expect(_byteMsg, byteMsg);
@@ -344,11 +461,11 @@ void main() {
 
       // test onTextMessage
       var textMsg = 'text message 1';
-      _listener.onTextMessage(textMsg);
+      _listener.onStringMessage(textMsg);
 
       // test onByteMessage
-      var byteMsg = utf8.encode('text message 1');
-      _listener.onByteMessage(byteMsg);
+      var byteMsg = Uint8List.fromList(utf8.encode('text message 1'));
+      _listener.onByteArrayMessage(byteMsg);
 
       // test onError
       var exception = Exception('exception 1');
@@ -384,13 +501,15 @@ void main() {
 
       // test onTextMessage
       var textMsg = 'text message 2';
-      _listener.onTextMessage(textMsg);
+      _listener.onStringMessage(textMsg);
 
       // verify
       expect(_textMsg, textMsg);
 
       // test onByteMessage
-      expect(() => _listener.onByteMessage(utf8.encode('byte message 2')),
+      expect(
+          () => _listener.onByteArrayMessage(
+              Uint8List.fromList(utf8.encode('byte message 2'))),
           throwsA(isA<UnsupportedError>()));
     });
 
@@ -422,24 +541,30 @@ void main() {
       expect(_closedReason, closedReason);
 
       // test onByteMessage
-      var byteMsg = utf8.encode('byte message 3');
-      _listener.onByteMessage(byteMsg);
+      var byteMsg = Uint8List.fromList(utf8.encode('byte message 3'));
+      _listener.onByteArrayMessage(byteMsg);
 
       // verify
       expect(_byteMsg, byteMsg);
 
       // test onTextMessage
-      expect(() => _listener.onTextMessage('text message 3'),
+      expect(() => _listener.onStringMessage('text message 3'),
           throwsA(isA<UnsupportedError>()));
     });
   });
 }
 
+Future<ByteData?> _sendMessageFromPlatform(
+    String channelName, MethodCall methodCall,
+    {Function(ByteData?)? callback}) {
+  final envelope = const StandardMethodCodec().encodeMethodCall(methodCall);
+  return TestDefaultBinaryMessengerBinding.instance!.defaultBinaryMessenger
+      .handlePlatformMessage(channelName, envelope, callback);
+}
+
 class MockMethodChannelWebSocketSupport extends Mock
     with MockPlatformInterfaceMixin
     implements MethodChannelWebSocketSupport {}
-
-class MockWebSocketListener extends Mock implements WebSocketListener {}
 
 class MockMethodChannel extends Mock implements MethodChannel {}
 

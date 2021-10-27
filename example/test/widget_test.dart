@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
-
 import 'package:web_socket_support_example/main.dart';
 
 class WebSocketSupportMock extends Mock
@@ -27,7 +26,7 @@ void main() {
 
   testWidgets('Verify connect and send operations',
       (WidgetTester tester) async {
-    var app = WebSocketSupportExampleApp();
+    var app = const WebSocketSupportExampleApp();
     var backend = WsBackend();
     var mockedWs = WebSocketSupportMock(); // mocked websocket support
 
@@ -63,10 +62,10 @@ void main() {
     // expect disconnected state
     expect(find.text('Disconnected'), findsOneWidget);
     expect(find.text('Connect'), findsOneWidget);
-    expect(find.byKey(Key('textField')), findsNothing);
+    expect(find.byKey(const Key('textField')), findsNothing);
 
     // Tap the add button.
-    await tester.tap(find.byKey(Key('connect')));
+    await tester.tap(find.byKey(const Key('connect')));
 
     // Rebuild the widget after the state has changed.
     await tester.pump();
@@ -74,20 +73,20 @@ void main() {
     // expect connected state
     expect(find.text('Connected'), findsOneWidget);
     expect(find.text('Disconnect'), findsOneWidget);
-    expect(find.byKey(Key('textField')), findsOneWidget);
+    expect(find.byKey(const Key('textField')), findsOneWidget);
 
     // enter 1 message and send
     var testMsg = 'test message 1';
-    await tester.enterText(find.byKey(Key('textField')), testMsg);
-    await tester.tap(find.byKey(Key('sendButton')));
+    await tester.enterText(find.byKey(const Key('textField')), testMsg);
+    await tester.tap(find.byKey(const Key('sendButton')));
 
     // Rebuild the widget after the state has changed.
     await tester.pump();
 
     // verify message response received and displayed
     expect(find.text('Connected'), findsOneWidget);
-    expect(find.byKey(Key('textField')), findsOneWidget);
-    expect(find.byKey(Key('replyHeader')), findsOneWidget);
+    expect(find.byKey(const Key('textField')), findsOneWidget);
+    expect(find.byKey(const Key('replyHeader')), findsOneWidget);
     expect(find.byKey(Key(testMsg)), findsOneWidget);
   });
 }

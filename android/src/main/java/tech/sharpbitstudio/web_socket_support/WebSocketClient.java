@@ -1,17 +1,15 @@
 package tech.sharpbitstudio.web_socket_support;
 
-import static tech.sharpbitstudio.web_socket_support.domain.Constants.ARGUMENT_BYTE_MESSAGE;
 import static tech.sharpbitstudio.web_socket_support.domain.Constants.ARGUMENT_CODE;
 import static tech.sharpbitstudio.web_socket_support.domain.Constants.ARGUMENT_OPTIONS;
 import static tech.sharpbitstudio.web_socket_support.domain.Constants.ARGUMENT_REASON;
-import static tech.sharpbitstudio.web_socket_support.domain.Constants.ARGUMENT_TEXT_MESSAGE;
 import static tech.sharpbitstudio.web_socket_support.domain.Constants.ARGUMENT_URL;
 import static tech.sharpbitstudio.web_socket_support.domain.Constants.IN_METHOD_NAME_CONNECT;
 import static tech.sharpbitstudio.web_socket_support.domain.Constants.IN_METHOD_NAME_DISCONNECT;
-import static tech.sharpbitstudio.web_socket_support.domain.Constants.IN_METHOD_NAME_SEND_BYTE_MSG;
-import static tech.sharpbitstudio.web_socket_support.domain.Constants.IN_METHOD_NAME_SEND_TEXT_MSG;
-import static tech.sharpbitstudio.web_socket_support.domain.Constants.OUT_METHOD_NAME_ON_BYTE_MSG;
-import static tech.sharpbitstudio.web_socket_support.domain.Constants.OUT_METHOD_NAME_ON_TEXT_MSG;
+import static tech.sharpbitstudio.web_socket_support.domain.Constants.IN_METHOD_NAME_SEND_BYTE_ARRAY_MSG;
+import static tech.sharpbitstudio.web_socket_support.domain.Constants.IN_METHOD_NAME_SEND_STRING_MSG;
+import static tech.sharpbitstudio.web_socket_support.domain.Constants.OUT_METHOD_NAME_ON_BYTE_ARRAY_MSG;
+import static tech.sharpbitstudio.web_socket_support.domain.Constants.OUT_METHOD_NAME_ON_STRING_MSG;
 
 import android.os.Handler;
 import android.util.Log;
@@ -116,7 +114,7 @@ public class WebSocketClient extends WebSocketListener implements MethodCallHand
       } else {
         // fall back to method call
         Log.i(TAG, "TextMessagesEventSink was null! Falling back to method call.");
-        methodChannel.invokeMethod(OUT_METHOD_NAME_ON_TEXT_MSG, text);
+        methodChannel.invokeMethod(OUT_METHOD_NAME_ON_STRING_MSG, text);
       }
     });
   }
@@ -136,7 +134,7 @@ public class WebSocketClient extends WebSocketListener implements MethodCallHand
       } else {
         // fall back to method call
         Log.i(TAG, "ByteMessagesEventSink was null! Falling back to method call.");
-        methodChannel.invokeMethod(OUT_METHOD_NAME_ON_BYTE_MSG, byteString.toByteArray());
+        methodChannel.invokeMethod(OUT_METHOD_NAME_ON_BYTE_ARRAY_MSG, byteString.toByteArray());
       }
     });
   }
@@ -212,8 +210,8 @@ public class WebSocketClient extends WebSocketListener implements MethodCallHand
       }
 
       // send text message
-      case IN_METHOD_NAME_SEND_TEXT_MSG: {
-        String message = call.argument(ARGUMENT_TEXT_MESSAGE);
+      case IN_METHOD_NAME_SEND_STRING_MSG: {
+        String message = call.arguments();
         if (sendTextMessage(message)) {
           result.success(null);
         } else {
@@ -225,8 +223,8 @@ public class WebSocketClient extends WebSocketListener implements MethodCallHand
       }
 
       // send byte message
-      case IN_METHOD_NAME_SEND_BYTE_MSG: {
-        byte[] message = call.argument(ARGUMENT_BYTE_MESSAGE);
+      case IN_METHOD_NAME_SEND_BYTE_ARRAY_MSG: {
+        byte[] message = call.arguments();
         if (sendByteMessage(ByteString.of(message != null ? message : new byte[0]))) {
           result.success(null);
         } else {

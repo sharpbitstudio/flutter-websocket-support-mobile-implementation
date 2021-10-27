@@ -3,12 +3,12 @@ version '0.0.1'
 
 buildscript {
   ext {
-    android_build_gradle_version = '4.1.3'
-    ben_manes_version = '0.38.0'
+    android_build_gradle_version = '7.0.3'
+    ben_manes_version = '0.39.0'
   }
   repositories {
     google()
-    jcenter()
+    mavenCentral()
     gradlePluginPortal()
   }
   dependencies {
@@ -19,42 +19,47 @@ buildscript {
 
 ext {
   lifecycle_version = "2.2.0"
-  okhttp_version = '4.9.1'
-  lombok_version = '1.18.18'
+  okhttp_version = '5.0.0-alpha.2'
+  lombok_version = '1.18.22'
 
   // java desugar
-  desugar_jdk_libs_version = '1.1.1'
+  desugar_jdk_libs_version = '1.1.5'
 
   // junit
   junit_version = '5.7.0'
-  mockito_version = '3.8.0'
+  mockito_version = '4.0.0'
 }
 
 rootProject.allprojects {
   repositories {
     google()
-    jcenter()
+    mavenCentral()
   }
 }
 
 apply plugin: 'com.android.library'
 apply plugin: 'com.github.ben-manes.versions'
 
+// jacoco
+apply from: "${rootProject.getProjectDir()}/jacoco.gradle"
+
+import static org.gradle.api.JavaVersion.VERSION_11
 android {
-  compileSdkVersion 29
+  compileSdkVersion 31
   compileOptions {
     // Flag to enable support for the new language APIs
     coreLibraryDesugaringEnabled true
-    // Sets Java compatibility to Java 8
-    sourceCompatibility JavaVersion.VERSION_1_8
-    targetCompatibility JavaVersion.VERSION_1_8
+    // Sets Java compatibility to Java 11
+    sourceCompatibility VERSION_11
+    targetCompatibility VERSION_11
   }
   defaultConfig {
-    minSdkVersion 21
-    targetSdkVersion 29
+    minSdkVersion 24
+    targetSdkVersion 31
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
   }
   lintOptions {
+    checkDependencies true
     disable 'InvalidPackage'
   }
   buildTypes {

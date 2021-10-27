@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:web_socket_support/web_socket_support.dart';
 import 'package:web_socket_support_platform_interface/web_socket_connection.dart';
 
+// ignore_for_file: avoid_print
 void main() {
   final backend = WsBackend();
   runApp(
@@ -20,7 +21,7 @@ void main() {
           create: (ctx) => WebSocketSupport(backend),
         ),
       ],
-      child: WebSocketSupportExampleApp(),
+      child: const WebSocketSupportExampleApp(),
     ),
   );
 }
@@ -49,7 +50,7 @@ class WsBackend with ChangeNotifier {
   }
 
   bool hasMessages() {
-    return _messages != null && _messages.isNotEmpty;
+    return _messages.isNotEmpty;
   }
 
   @override
@@ -61,13 +62,13 @@ class WsBackend with ChangeNotifier {
 
 // TestApp use this ChangeNotifier to listen for connection status changes
 class WebSocketSupport with ChangeNotifier {
-  static final String SERVER_URI = 'ws://echo.websocket.org';
+  static const String serverUrl = 'ws://ws.ifelse.io';
 
   final WsBackend _backend;
 
   // locals
-  WebSocketClient _wsClient;
-  WebSocketConnection _webSocketConnection;
+  late WebSocketClient _wsClient;
+  WebSocketConnection? _webSocketConnection;
   bool working = false;
 
   WebSocketSupport(this._backend) {
@@ -78,7 +79,6 @@ class WebSocketSupport with ChangeNotifier {
       (_, __) => {},
       _onError,
     ));
-    initConnection();
     print('WebSocketSupport created.');
   }
 
@@ -115,7 +115,7 @@ class WebSocketSupport with ChangeNotifier {
 
   void sendMessage() {
     if (_webSocketConnection != null) {
-      _webSocketConnection.sendTextMessage(_backend.textController.text);
+      _webSocketConnection?.sendStringMessage(_backend.textController.text);
       _backend.textController.clear();
     }
   }
@@ -124,8 +124,14 @@ class WebSocketSupport with ChangeNotifier {
     working = true;
     _backend.textController.clear();
     _backend.clearMesages();
-    await _wsClient.connect(SERVER_URI);
-    notifyListeners();
+    try {
+      await _wsClient.connect(serverUrl);
+      notifyListeners();
+    } on PlatformException catch (e) {
+      final errorMsg = 'Failed to connect to ws server. Error:$e';
+      print(errorMsg);
+      _backend.addMesage(ServerMessage(errorMsg, DateTime.now()));
+    }
   }
 
   Future<void> disconnect() async {
@@ -133,21 +139,14 @@ class WebSocketSupport with ChangeNotifier {
     await _wsClient.disconnect();
     notifyListeners();
   }
-
-  Future<void> initConnection() async {
-    try {
-      working = true;
-      await _wsClient.connect(SERVER_URI);
-    } on PlatformException catch (e) {
-      print('Failed to connect to ws server. Error:$e');
-    }
-  }
 }
 
 // ExampleApp uses WebSocketSupport to communicate with remote ws server
 // App is able to send arbitrary text messages to remote echo server
 // and will keep all remote servers replys in list as long as ws session is up.
 class WebSocketSupportExampleApp extends StatelessWidget {
+  const WebSocketSupportExampleApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -157,7 +156,7 @@ class WebSocketSupportExampleApp extends StatelessWidget {
         ),
         body: Column(
           mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
+          children: const <Widget>[
             WsControlPanel(),
             WsTextInput(),
             WsMessages(),
@@ -169,11 +168,13 @@ class WebSocketSupportExampleApp extends StatelessWidget {
 }
 
 class WsControlPanel extends StatelessWidget {
+  const WsControlPanel({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Center(
           child: Consumer<WebSocketSupport>(builder: (ctx, ws, _) {
             return Row(
@@ -183,7 +184,8 @@ class WsControlPanel extends StatelessWidget {
                   padding: const EdgeInsets.only(left: 10, right: 10),
                   child: Row(
                     children: [
-                      Text('WS status:'),
+                      // status title
+                      const Text('WS status:'),
                       Padding(
                         padding: const EdgeInsets.only(left: 5, right: 5),
                         child: Icon(
@@ -194,6 +196,7 @@ class WsControlPanel extends StatelessWidget {
                           size: 20,
                         ),
                       ),
+                      //status value
                       Text(
                         (ws.isConnected() ? 'Connected' : 'Disconnected'),
                         style: TextStyle(color: _connectionColor(ws)),
@@ -204,7 +207,7 @@ class WsControlPanel extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(left: 10, right: 10),
                   child: ElevatedButton(
-                    key: Key('connect'),
+                    key: const Key('connect'),
                     onPressed: ws.working
                         ? null
                         : () async {
@@ -212,15 +215,16 @@ class WsControlPanel extends StatelessWidget {
                                 ? await ws.disconnect()
                                 : await ws.connect();
                           },
-                    child:
-                        ws.isConnected() ? Text('Disconnect') : Text('Connect'),
+                    child: ws.isConnected()
+                        ? const Text('Disconnect')
+                        : const Text('Connect'),
                   ),
                 ),
               ],
             );
           }),
         ),
-        Divider(),
+        const Divider(),
       ],
     );
   }
@@ -230,11 +234,13 @@ class WsControlPanel extends StatelessWidget {
 }
 
 class WsTextInput extends StatelessWidget {
+  const WsTextInput({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Consumer<WebSocketSupport>(builder: (ctx, ws, _) {
       return !ws.isConnected()
-          ? SizedBox.shrink()
+          ? const SizedBox.shrink()
           : Column(
               children: [
                 Container(
@@ -243,12 +249,12 @@ class WsTextInput extends StatelessWidget {
                     children: <Widget>[
                       Expanded(
                         child: TextField(
-                          key: Key('textField'),
+                          key: const Key('textField'),
                           textAlign: TextAlign.center,
                           controller:
                               Provider.of<WsBackend>(context, listen: false)
                                   .textController,
-                          decoration: InputDecoration(
+                          decoration: const InputDecoration(
                             focusedBorder: OutlineInputBorder(
                               borderSide: BorderSide(
                                   color: Colors.greenAccent, width: 2.0),
@@ -262,14 +268,14 @@ class WsTextInput extends StatelessWidget {
                         ),
                       ),
                       IconButton(
-                        key: Key('sendButton'),
-                        icon: Icon(Icons.send),
+                        key: const Key('sendButton'),
+                        icon: const Icon(Icons.send),
                         onPressed: () => ws.sendMessage(),
                       ),
                     ],
                   ),
                 ),
-                Divider(),
+                const Divider(),
               ],
             );
     });
@@ -277,18 +283,20 @@ class WsTextInput extends StatelessWidget {
 }
 
 class WsMessages extends StatelessWidget {
+  const WsMessages({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Consumer<WsBackend>(builder: (ctx, be, _) {
       return be.getMessages().isEmpty
-          ? SizedBox.shrink()
+          ? const SizedBox.shrink()
           : Expanded(
               child: Column(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10, bottom: 10),
+                  const Padding(
+                    padding: EdgeInsets.only(top: 10, bottom: 10),
                     child: Text(
-                      'Reply messages from: ${WebSocketSupport.SERVER_URI}',
+                      'Reply messages from: ${WebSocketSupport.serverUrl}',
                       key: Key('replyHeader'),
                     ),
                   ),
@@ -296,7 +304,7 @@ class WsMessages extends StatelessWidget {
                     child: ListView.separated(
                       itemCount: be.getMessages().length,
                       separatorBuilder: (BuildContext context, int index) =>
-                          Divider(),
+                          const Divider(),
                       itemBuilder: (BuildContext context, int index) {
                         var message = be.getMessages()[index];
                         return ListTile(
