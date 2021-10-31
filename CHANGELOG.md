@@ -1,3 +1,7 @@
+## 0.2.0
+
+* Added null safety (min SDK >= 2.14.4)
+
 ## 0.1.1
 
 * Minor build & readme update 

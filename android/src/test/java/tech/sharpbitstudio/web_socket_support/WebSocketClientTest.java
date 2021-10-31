@@ -4,27 +4,25 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyMap;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static tech.sharpbitstudio.web_socket_support.domain.Constants.ARGUMENT_BYTE_MESSAGE;
 import static tech.sharpbitstudio.web_socket_support.domain.Constants.ARGUMENT_OPTIONS;
-import static tech.sharpbitstudio.web_socket_support.domain.Constants.ARGUMENT_TEXT_MESSAGE;
 import static tech.sharpbitstudio.web_socket_support.domain.Constants.ARGUMENT_URL;
 import static tech.sharpbitstudio.web_socket_support.domain.Constants.IN_METHOD_NAME_CONNECT;
 import static tech.sharpbitstudio.web_socket_support.domain.Constants.IN_METHOD_NAME_DISCONNECT;
-import static tech.sharpbitstudio.web_socket_support.domain.Constants.IN_METHOD_NAME_SEND_BYTE_MSG;
-import static tech.sharpbitstudio.web_socket_support.domain.Constants.IN_METHOD_NAME_SEND_TEXT_MSG;
-import static tech.sharpbitstudio.web_socket_support.domain.Constants.OUT_METHOD_NAME_ON_BYTE_MSG;
-import static tech.sharpbitstudio.web_socket_support.domain.Constants.OUT_METHOD_NAME_ON_TEXT_MSG;
+import static tech.sharpbitstudio.web_socket_support.domain.Constants.IN_METHOD_NAME_SEND_BYTE_ARRAY_MSG;
+import static tech.sharpbitstudio.web_socket_support.domain.Constants.IN_METHOD_NAME_SEND_STRING_MSG;
+import static tech.sharpbitstudio.web_socket_support.domain.Constants.OUT_METHOD_NAME_ON_BYTE_ARRAY_MSG;
+import static tech.sharpbitstudio.web_socket_support.domain.Constants.OUT_METHOD_NAME_ON_STRING_MSG;
 
 import android.os.Handler;
 import io.flutter.plugin.common.EventChannel;
@@ -32,11 +30,9 @@ import io.flutter.plugin.common.EventChannel.EventSink;
 import io.flutter.plugin.common.EventChannel.StreamHandler;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
-import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 import kotlin.text.Charsets;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -65,9 +61,6 @@ public class WebSocketClientTest {
   private final EventSink textEventSink = Mockito.mock(EventSink.class);
   private final EventSink byteEventSink = Mockito.mock(EventSink.class);
 
-  // locals
-  private final AtomicReference<MethodCallHandler> callHandler = new AtomicReference<>();
-
   // tested class
   private WebSocketClient client;
 
@@ -77,17 +70,6 @@ public class WebSocketClientTest {
         textMessageEventChannel, binaryMessageEventChannel, textEventSink);
 
     // common stubbing
-    // methodChannel
-    doAnswer(invocation -> {
-      callHandler.set(invocation.getArgument(0));
-      return null;
-    }).when(methodChannel).setMethodCallHandler(any(MethodCallHandler.class));
-    doAnswer(invocation -> {
-      callHandler.get()
-          .onMethodCall(new MethodCall(invocation.getArgument(0), invocation.getArgument(1)),
-              invocation.getArgument(2));
-      return null;
-    }).when(methodChannel).invokeMethod(anyString(), anyMap(), any(Result.class));
     // configurator
     when(configurator.configure(any(OkHttpClient.class), anyMap()))
         .thenReturn(mockedClient);
@@ -131,7 +113,8 @@ public class WebSocketClientTest {
         });
 
     // test method
-    methodChannel.invokeMethod(IN_METHOD_NAME_CONNECT, arguments, Mockito.mock(Result.class));
+    client.onMethodCall(new MethodCall(IN_METHOD_NAME_CONNECT, arguments),
+        Mockito.mock(Result.class));
 
     // validate that WS_OPENED is called on method channel
     ArgumentCaptor<String> argumentMethodName = ArgumentCaptor.forClass(String.class);
@@ -160,7 +143,8 @@ public class WebSocketClientTest {
     }).when(mockedWebSocket).close(anyInt(), anyString());
 
     // 1st connect
-    methodChannel.invokeMethod(IN_METHOD_NAME_CONNECT, arguments, Mockito.mock(Result.class));
+    client.onMethodCall(new MethodCall(IN_METHOD_NAME_CONNECT, arguments),
+        Mockito.mock(Result.class));
 
     // validate that WS_OPENED is called on method channel
     ArgumentCaptor<String> argumentMethodName = ArgumentCaptor.forClass(String.class);
@@ -168,7 +152,8 @@ public class WebSocketClientTest {
     assertEquals(SystemEventType.WS_OPENED.getMethodName(), argumentMethodName.getValue());
 
     // 2nd connect
-    methodChannel.invokeMethod(IN_METHOD_NAME_CONNECT, arguments, Mockito.mock(Result.class));
+    client.onMethodCall(new MethodCall(IN_METHOD_NAME_CONNECT, arguments),
+        Mockito.mock(Result.class));
 
     // verify new web socket called
     verify(configurator, times(2)).configure(any(OkHttpClient.class), anyMap());
@@ -203,7 +188,8 @@ public class WebSocketClientTest {
     }).when(mockedWebSocket).cancel();
 
     // test connect
-    methodChannel.invokeMethod(IN_METHOD_NAME_CONNECT, arguments, Mockito.mock(Result.class));
+    client.onMethodCall(new MethodCall(IN_METHOD_NAME_CONNECT, arguments),
+        Mockito.mock(Result.class));
 
     // validate that WS_OPENED is called on method channel
     ArgumentCaptor<String> argumentMethodName = ArgumentCaptor.forClass(String.class);
@@ -211,7 +197,8 @@ public class WebSocketClientTest {
     assertEquals(SystemEventType.WS_OPENED.getMethodName(), argumentMethodName.getValue());
 
     // 2nd connect
-    methodChannel.invokeMethod(IN_METHOD_NAME_CONNECT, arguments, Mockito.mock(Result.class));
+    client.onMethodCall(new MethodCall(IN_METHOD_NAME_CONNECT, arguments),
+        Mockito.mock(Result.class));
 
     // validate that WS_FAILURE was called 3 times (reconnect max retries)
     ArgumentCaptor<String> argumentMethodName2 = ArgumentCaptor.forClass(String.class);
@@ -260,7 +247,7 @@ public class WebSocketClientTest {
     client.onMessage(Mockito.mock(WebSocket.class), "");
     ArgumentCaptor<String> textMethodNameCaptor = ArgumentCaptor.forClass(String.class);
     verify(methodChannel).invokeMethod(textMethodNameCaptor.capture(), any());
-    assertEquals(OUT_METHOD_NAME_ON_TEXT_MSG, textMethodNameCaptor.getValue());
+    assertEquals(OUT_METHOD_NAME_ON_STRING_MSG, textMethodNameCaptor.getValue());
 
     // kill byte stream
     streamHandlers[1].onCancel(null);
@@ -268,7 +255,7 @@ public class WebSocketClientTest {
     client.onMessage(Mockito.mock(WebSocket.class), ByteString.encodeUtf8(""));
     ArgumentCaptor<String> byteMethodNameCaptor = ArgumentCaptor.forClass(String.class);
     verify(methodChannel, times(2)).invokeMethod(byteMethodNameCaptor.capture(), any());
-    assertEquals(OUT_METHOD_NAME_ON_BYTE_MSG, byteMethodNameCaptor.getValue());
+    assertEquals(OUT_METHOD_NAME_ON_BYTE_ARRAY_MSG, byteMethodNameCaptor.getValue());
   }
 
   @Test
@@ -290,7 +277,8 @@ public class WebSocketClientTest {
     client.onOpen(mockedWebSocket, Mockito.mock(Response.class));
 
     // test method
-    methodChannel.invokeMethod(IN_METHOD_NAME_DISCONNECT, arguments, Mockito.mock(Result.class));
+    client.onMethodCall(new MethodCall(IN_METHOD_NAME_DISCONNECT, arguments),
+        Mockito.mock(Result.class));
 
     // validate that disconnect call is propagated to WebSocket
     ArgumentCaptor<Integer> captor1 = ArgumentCaptor.forClass(Integer.class);
@@ -316,7 +304,8 @@ public class WebSocketClientTest {
         });
 
     // test method
-    methodChannel.invokeMethod(IN_METHOD_NAME_DISCONNECT, arguments, Mockito.mock(Result.class));
+    client.onMethodCall(new MethodCall(IN_METHOD_NAME_DISCONNECT, arguments),
+        Mockito.mock(Result.class));
 
     // validate that disconnect call is propagated to WebSocket
     verify(mockedWebSocket, never()).close(anyInt(), anyString());
@@ -416,17 +405,17 @@ public class WebSocketClientTest {
 
     // data
     final String textMessage = "Test message 1";
-    final Map<String, Object> arguments = new HashMap<>();
-    arguments.put(ARGUMENT_TEXT_MESSAGE, textMessage);
-    final Result result = Mockito.mock(Result.class);
 
-    // move state to connected
+    // prepare mocks
+    final Result result = Mockito.mock(Result.class);
     final WebSocket mockedWebSocket = Mockito.mock(WebSocket.class);
     when(mockedWebSocket.send(anyString())).thenReturn(true);
+
+    // move state to connected
     client.onOpen(mockedWebSocket, Mockito.mock(Response.class));
 
     // test method
-    methodChannel.invokeMethod(IN_METHOD_NAME_SEND_TEXT_MSG, arguments, result);
+    client.onMethodCall(new MethodCall(IN_METHOD_NAME_SEND_STRING_MSG, textMessage), result);
 
     // verify correct message sent to web socket
     ArgumentCaptor<String> argumentMessage = ArgumentCaptor.forClass(String.class);
@@ -440,17 +429,17 @@ public class WebSocketClientTest {
 
     // data
     final String textMessage = "Test message 1 error";
-    final Map<String, Object> arguments = new HashMap<>();
-    arguments.put(ARGUMENT_TEXT_MESSAGE, textMessage);
-    final Result result = Mockito.mock(Result.class);
 
-    // move state to connected
+    // prepare mocks
+    final Result result = Mockito.mock(Result.class);
     final WebSocket mockedWebSocket = Mockito.mock(WebSocket.class);
     when(mockedWebSocket.send(anyString())).thenReturn(false);
+
+    // move state to connected (to receive WebSocket)
     client.onOpen(mockedWebSocket, Mockito.mock(Response.class));
 
     // test method
-    methodChannel.invokeMethod(IN_METHOD_NAME_SEND_TEXT_MSG, arguments, result);
+    client.onMethodCall(new MethodCall(IN_METHOD_NAME_SEND_STRING_MSG, textMessage), result);
 
     // verify correct result.error was called
     ArgumentCaptor<String> errorCodeCaptor = ArgumentCaptor.forClass(String.class);
@@ -465,12 +454,10 @@ public class WebSocketClientTest {
 
     // data
     final String textMessage = "Test message 1";
-    final Map<String, Object> arguments = new HashMap<>();
-    arguments.put(ARGUMENT_TEXT_MESSAGE, textMessage);
     final Result result = Mockito.mock(Result.class);
 
     // test method
-    methodChannel.invokeMethod(IN_METHOD_NAME_SEND_TEXT_MSG, arguments, result);
+    client.onMethodCall(new MethodCall(IN_METHOD_NAME_SEND_STRING_MSG, textMessage), result);
 
     // verify error was called on result
     verify(result).error(anyString(), anyString(), any());
@@ -517,17 +504,17 @@ public class WebSocketClientTest {
 
     // data
     final byte[] byteMessage = "Test message 1".getBytes(Charsets.UTF_8);
-    final Map<String, Object> arguments = new HashMap<>();
-    arguments.put(ARGUMENT_BYTE_MESSAGE, byteMessage);
-    final Result result = Mockito.mock(Result.class);
 
-    // move state to connected
+    // prepare mocks
+    final Result result = Mockito.mock(Result.class);
     final WebSocket mockedWebSocket = Mockito.mock(WebSocket.class);
     when(mockedWebSocket.send(any(ByteString.class))).thenReturn(true);
+
+    // move state to connected (to receive WebSocket)
     client.onOpen(mockedWebSocket, Mockito.mock(Response.class));
 
     // test method
-    methodChannel.invokeMethod(IN_METHOD_NAME_SEND_BYTE_MSG, arguments, result);
+    client.onMethodCall(new MethodCall(IN_METHOD_NAME_SEND_BYTE_ARRAY_MSG, byteMessage), result);
 
     // verify correct message sent to web socket
     ArgumentCaptor<ByteString> argumentMessage = ArgumentCaptor.forClass(ByteString.class);
@@ -540,21 +527,23 @@ public class WebSocketClientTest {
   public void sendNullBinaryMessageTest() {
 
     // data
-    final Map<String, Object> arguments = new HashMap<>();
-    final Result result = Mockito.mock(Result.class);
+    final byte[] message = new byte[0];
 
-    // move state to connected
+    // prepare mocks
+    final Result result = Mockito.mock(Result.class);
     final WebSocket mockedWebSocket = Mockito.mock(WebSocket.class);
     when(mockedWebSocket.send(any(ByteString.class))).thenReturn(true);
+
+    // move state to connected
     client.onOpen(mockedWebSocket, Mockito.mock(Response.class));
 
     // test method
-    methodChannel.invokeMethod(IN_METHOD_NAME_SEND_BYTE_MSG, arguments, result);
+    client.onMethodCall(new MethodCall(IN_METHOD_NAME_SEND_BYTE_ARRAY_MSG, message), result);
 
     // verify correct message sent to web socket
     ArgumentCaptor<ByteString> argumentMessage = ArgumentCaptor.forClass(ByteString.class);
     verify(mockedWebSocket).send(argumentMessage.capture());
-    assertEquals(ByteString.of(), argumentMessage.getValue());
+    assertEquals(ByteString.of(message), argumentMessage.getValue());
     verify(result).success(any());
   }
 
@@ -563,17 +552,17 @@ public class WebSocketClientTest {
 
     // data
     final byte[] byteMessage = "Test message 1".getBytes(Charsets.UTF_8);
-    final Map<String, Object> arguments = new HashMap<>();
-    arguments.put(ARGUMENT_BYTE_MESSAGE, byteMessage);
-    final Result result = Mockito.mock(Result.class);
 
-    // move state to connected
+    // prepare mocks
+    final Result result = Mockito.mock(Result.class);
     final WebSocket mockedWebSocket = Mockito.mock(WebSocket.class);
     when(mockedWebSocket.send(any(ByteString.class))).thenReturn(false);
+
+    // move state to connected
     client.onOpen(mockedWebSocket, Mockito.mock(Response.class));
 
     // test method
-    methodChannel.invokeMethod(IN_METHOD_NAME_SEND_BYTE_MSG, arguments, result);
+    client.onMethodCall(new MethodCall(IN_METHOD_NAME_SEND_BYTE_ARRAY_MSG, byteMessage), result);
 
     // verify correct message sent to web socket
     ArgumentCaptor<String> errorCodeCaptor = ArgumentCaptor.forClass(String.class);
@@ -588,12 +577,10 @@ public class WebSocketClientTest {
 
     // data
     final byte[] byteMessage = "Test message 1".getBytes(Charsets.UTF_8);
-    final Map<String, Object> arguments = new HashMap<>();
-    arguments.put(ARGUMENT_BYTE_MESSAGE, byteMessage);
     final Result result = Mockito.mock(Result.class);
 
     // test method
-    methodChannel.invokeMethod(IN_METHOD_NAME_SEND_BYTE_MSG, arguments, result);
+    client.onMethodCall(new MethodCall(IN_METHOD_NAME_SEND_BYTE_ARRAY_MSG, byteMessage), result);
 
     // verify error was called on result
     verify(result).error(anyString(), anyString(), any());
@@ -642,12 +629,10 @@ public class WebSocketClientTest {
 
     // data
     final byte[] byteMessage = "Test message 1".getBytes(Charsets.UTF_8);
-    final Map<String, Object> arguments = new HashMap<>();
-    arguments.put(ARGUMENT_BYTE_MESSAGE, byteMessage);
     final Result result = Mockito.mock(Result.class);
 
     // test method
-    methodChannel.invokeMethod("invalidMethodName", arguments, result);
+    client.onMethodCall(new MethodCall("invalidMethodName", byteMessage), result);
 
     // verify notImplemented called
     verify(result).notImplemented();

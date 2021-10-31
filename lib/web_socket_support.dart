@@ -9,22 +9,26 @@ import 'package:web_socket_support_platform_interface/web_socket_listener.dart';
 import 'package:web_socket_support_platform_interface/web_socket_options.dart';
 import 'package:web_socket_support_platform_interface/web_socket_support_platform_interface.dart';
 
+export 'package:web_socket_support_platform_interface/web_scoket_exception.dart'
+    show WebSocketException;
+export 'package:web_socket_support_platform_interface/web_socket_connection.dart'
+    show WebSocketConnection;
 // Export necessary Classes from the platform_interface and this implementation
 // so plugin users can use them directly.
 export 'package:web_socket_support_platform_interface/web_socket_listener.dart'
     show WebSocketListener;
-export 'package:web_socket_support_platform_interface/web_socket_connection.dart'
-    show WebSocketConnection;
-export 'package:web_socket_support_platform_interface/web_scoket_exception.dart'
-    show WebSocketException;
 
 class WebSocketClient extends WebSocketSupportPlatform {
+  //
+  // constants
+  static const wrongListenerExceptionCode = 'WRONG_WS_LISTENER';
+
   /// constructor
   WebSocketClient(WebSocketListener listener) {
     // this is necessary in order to use client supplied listener
     if (listener is DummyWebSocketListener) {
       throw PlatformException(
-        code: 'WRONG_WS_LISTENER',
+        code: wrongListenerExceptionCode,
         message: 'Client must supply specific WebSocketListener implementation'
             ' which is not DummyWebSocketListener.',
       );
@@ -46,8 +50,6 @@ class WebSocketClient extends WebSocketSupportPlatform {
   @override
   Future<void> connect(String serverUrl,
       {WebSocketOptions options = const WebSocketOptions()}) async {
-    assertNotNull(serverUrl);
-    assertNotNull(options);
     return await WebSocketSupportPlatform.instance.connect(
       serverUrl,
       options: options,
@@ -65,10 +67,6 @@ class WebSocketClient extends WebSocketSupportPlatform {
       code: code,
       reason: reason,
     );
-  }
-
-  void assertNotNull(Object object) {
-    assert(object != null);
   }
 }
 
@@ -131,12 +129,12 @@ class DefaultWebSocketListener implements WebSocketListener {
   }
 
   @override
-  void onTextMessage(String message) {
+  void onStringMessage(String message) {
     _onStringMessage(message);
   }
 
   @override
-  void onByteMessage(Uint8List message) {
+  void onByteArrayMessage(Uint8List message) {
     _onByteMessage(message);
   }
 
