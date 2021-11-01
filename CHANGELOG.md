@@ -1,3 +1,7 @@
+## 0.2.1
+
+* fixed gradle build issue
+
 ## 0.2.0
 
 * Added null safety (min SDK >= 2.14.4)
