@@ -41,7 +41,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.github.ben-manes.versions'
 
 // jacoco
-apply from: "${rootProject.getProjectDir()}/jacoco.gradle"
+apply from: "${project.getProjectDir()}/jacoco.gradle"
 
 import static org.gradle.api.JavaVersion.VERSION_11
 android {

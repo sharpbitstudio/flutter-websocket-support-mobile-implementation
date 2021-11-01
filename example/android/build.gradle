@@ -38,13 +38,3 @@ task clean(type: Delete) {
 wrapper {
     distributionUrl = 'https://services.gradle.org/distributions/gradle-7.2-all.zip'
 }
-
-//subprojects {
-//    afterEvaluate { project ->
-//        if (!project.projectDir.toString().contains("example/")) {
-//            // Apply jacoco only to modules that are not in example folder
-//            println "Applying Jacoco plugin to: ${project.projectDir.toString()}"
-//            project.apply from: "${rootProject.getProjectDir()}/jacoco.gradle"
-//        }
-//    }
-//}
