@@ -48,7 +48,7 @@ class WebSocketClient extends WebSocketSupportPlatform {
   /// Initialize ws connection to specified server url.
   /// If connection was successful, [onWsOpened] will be invoked.
   @override
-  Future<void> connect(String serverUrl,
+  Future<bool?> connect(String serverUrl,
       {WebSocketOptions options = const WebSocketOptions()}) async {
     return await WebSocketSupportPlatform.instance.connect(
       serverUrl,
@@ -59,7 +59,7 @@ class WebSocketClient extends WebSocketSupportPlatform {
   /// Initialize ws connection close by client.
   /// When connection is successfully closed, [onWsClosed] will be invoked.
   @override
-  Future<void> disconnect({
+  Future<bool?> disconnect({
     int code = 1000,
     String reason = 'Client done.',
   }) async {

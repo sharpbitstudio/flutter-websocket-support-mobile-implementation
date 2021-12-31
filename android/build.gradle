@@ -3,8 +3,8 @@ version '0.0.1'
 
 buildscript {
   ext {
-    android_build_gradle_version = '7.0.3'
-    ben_manes_version = '0.39.0'
+    android_build_gradle_version = '7.0.4'
+    ben_manes_version = '0.40.0'
   }
   repositories {
     google()
@@ -19,7 +19,7 @@ buildscript {
 
 ext {
   lifecycle_version = "2.2.0"
-  okhttp_version = '5.0.0-alpha.2'
+  okhttp_version = '5.0.0-alpha.3'
   lombok_version = '1.18.22'
 
   // java desugar
@@ -27,7 +27,7 @@ ext {
 
   // junit
   junit_version = '5.7.0'
-  mockito_version = '4.0.0'
+  mockito_version = '4.2.0'
 }
 
 rootProject.allprojects {
