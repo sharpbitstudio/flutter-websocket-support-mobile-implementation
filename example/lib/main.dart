@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:web_socket_support/web_socket_support.dart';
-import 'package:web_socket_support_platform_interface/web_socket_connection.dart';
 
 // ignore_for_file: avoid_print
 void main() {

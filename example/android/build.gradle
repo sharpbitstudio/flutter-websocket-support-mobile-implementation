@@ -1,7 +1,7 @@
 buildscript {
     ext {
-        android_build_gradle_version = '7.0.3'
-        jacoco_version = '0.8.6'
+        android_build_gradle_version = '7.0.4'
+        jacoco_version = '0.8.7'
     }
     repositories {
         google()

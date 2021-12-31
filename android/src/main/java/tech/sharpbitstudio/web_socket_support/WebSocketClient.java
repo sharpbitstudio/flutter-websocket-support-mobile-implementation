@@ -188,12 +188,12 @@ public class WebSocketClient extends WebSocketListener implements MethodCallHand
       case IN_METHOD_NAME_CONNECT: {
 
         // get arguments from call
-        String url = call.argument(ARGUMENT_URL);
-        Map<String, Object> options = call.argument(ARGUMENT_OPTIONS);
+        final String url = call.argument(ARGUMENT_URL);
+        final Map<String, Object> options = call.argument(ARGUMENT_OPTIONS);
 
         // connect to WS server
         connect(Objects.requireNonNull(url), options);
-        result.success(null);
+        result.success(true);
         break;
       }
 
@@ -205,15 +205,15 @@ public class WebSocketClient extends WebSocketListener implements MethodCallHand
         final String reason = call.argument(ARGUMENT_REASON);
 
         disconnect(code, reason);
-        result.success(null);
+        result.success(true);
         break;
       }
 
       // send text message
       case IN_METHOD_NAME_SEND_STRING_MSG: {
-        String message = call.arguments();
+        final String message = call.arguments();
         if (sendTextMessage(message)) {
-          result.success(null);
+          result.success(true);
         } else {
           // TODO: error code should be reconsidered
           Log.e(TAG, "Unable to send text message to Ws server!");
@@ -224,9 +224,9 @@ public class WebSocketClient extends WebSocketListener implements MethodCallHand
 
       // send byte message
       case IN_METHOD_NAME_SEND_BYTE_ARRAY_MSG: {
-        byte[] message = call.arguments();
+        final byte[] message = call.arguments();
         if (sendByteMessage(ByteString.of(message != null ? message : new byte[0]))) {
-          result.success(null);
+          result.success(true);
         } else {
           // TODO: error code should be reconsidered
           Log.e(TAG, "Unable to send binary message to Ws server!");

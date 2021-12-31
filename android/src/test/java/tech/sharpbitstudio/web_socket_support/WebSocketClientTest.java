@@ -101,7 +101,7 @@ public class WebSocketClientTest {
   public void connectTest() {
 
     // prepare data
-    Map<String, Object> arguments = new HashMap<>();
+    final Map<String, Object> arguments = new HashMap<>();
     arguments.put(ARGUMENT_URL, "http://fakeUrl");
     arguments.put(ARGUMENT_OPTIONS, new HashMap<>());
 
@@ -113,13 +113,16 @@ public class WebSocketClientTest {
         });
 
     // test method
-    client.onMethodCall(new MethodCall(IN_METHOD_NAME_CONNECT, arguments),
-        Mockito.mock(Result.class));
+    final Result mockedResult = Mockito.mock(Result.class);
+    client.onMethodCall(new MethodCall(IN_METHOD_NAME_CONNECT, arguments), mockedResult);
 
     // validate that WS_OPENED is called on method channel
-    ArgumentCaptor<String> argumentMethodName = ArgumentCaptor.forClass(String.class);
+    final ArgumentCaptor<String> argumentMethodName = ArgumentCaptor.forClass(String.class);
     verify(methodChannel).invokeMethod(argumentMethodName.capture(), any());
     assertEquals(SystemEventType.WS_OPENED.getMethodName(), argumentMethodName.getValue());
+
+    // validate result was true
+    verify(mockedResult).success(true);
   }
 
   @Test
@@ -277,8 +280,8 @@ public class WebSocketClientTest {
     client.onOpen(mockedWebSocket, Mockito.mock(Response.class));
 
     // test method
-    client.onMethodCall(new MethodCall(IN_METHOD_NAME_DISCONNECT, arguments),
-        Mockito.mock(Result.class));
+    final Result mockedResult = Mockito.mock(Result.class);
+    client.onMethodCall(new MethodCall(IN_METHOD_NAME_DISCONNECT, arguments), mockedResult);
 
     // validate that disconnect call is propagated to WebSocket
     ArgumentCaptor<Integer> captor1 = ArgumentCaptor.forClass(Integer.class);
@@ -286,6 +289,9 @@ public class WebSocketClientTest {
     verify(mockedWebSocket).close(captor1.capture(), captor2.capture());
     assertEquals(1000, (int) captor1.getValue()); // default close code
     assertEquals("Client done.", captor2.getValue()); // default reason
+
+    // validate result was true
+    verify(mockedResult).success(true);
   }
 
   @Test
@@ -418,10 +424,10 @@ public class WebSocketClientTest {
     client.onMethodCall(new MethodCall(IN_METHOD_NAME_SEND_STRING_MSG, textMessage), result);
 
     // verify correct message sent to web socket
-    ArgumentCaptor<String> argumentMessage = ArgumentCaptor.forClass(String.class);
+    final ArgumentCaptor<String> argumentMessage = ArgumentCaptor.forClass(String.class);
     verify(mockedWebSocket).send(argumentMessage.capture());
     assertEquals(textMessage, argumentMessage.getValue());
-    verify(result).success(any());
+    verify(result).success(true);
   }
 
   @Test
@@ -520,7 +526,7 @@ public class WebSocketClientTest {
     ArgumentCaptor<ByteString> argumentMessage = ArgumentCaptor.forClass(ByteString.class);
     verify(mockedWebSocket).send(argumentMessage.capture());
     assertEquals(ByteString.of(byteMessage), argumentMessage.getValue());
-    verify(result).success(any());
+    verify(result).success(true);
   }
 
   @Test

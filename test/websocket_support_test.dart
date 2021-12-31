@@ -10,7 +10,6 @@ import 'package:mockito/mockito.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:web_socket_support/web_socket_support.dart';
 import 'package:web_socket_support_platform_interface/method_channel_web_socket_support.dart';
-import 'package:web_socket_support_platform_interface/web_socket_listener.dart';
 import 'package:web_socket_support_platform_interface/web_socket_options.dart';
 import 'package:web_socket_support_platform_interface/web_socket_support_platform_interface.dart';
 

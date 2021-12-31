@@ -1,3 +1,9 @@
+## 0.2.2
+
+* web_socket_support_platform_interface version bumped to 0.3.0
+* all methodChannel calls now return `bool?`
+* android dependencies update
+
 ## 0.2.1
 
 * fixed gradle build issue
