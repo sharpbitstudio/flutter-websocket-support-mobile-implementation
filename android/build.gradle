@@ -3,7 +3,7 @@ version '0.0.1'
 
 buildscript {
   ext {
-    android_build_gradle_version = '7.0.4'
+    android_build_gradle_version = '4.2.2'
     ben_manes_version = '0.40.0'
   }
   repositories {
@@ -43,15 +43,15 @@ apply plugin: 'com.github.ben-manes.versions'
 // jacoco
 apply from: "${project.getProjectDir()}/jacoco.gradle"
 
-import static org.gradle.api.JavaVersion.VERSION_11
+import static org.gradle.api.JavaVersion.VERSION_1_8
 android {
   compileSdkVersion 31
   compileOptions {
     // Flag to enable support for the new language APIs
     coreLibraryDesugaringEnabled true
     // Sets Java compatibility to Java 11
-    sourceCompatibility VERSION_11
-    targetCompatibility VERSION_11
+    sourceCompatibility VERSION_1_8
+    targetCompatibility VERSION_1_8
   }
   defaultConfig {
     minSdkVersion 24

@@ -1,3 +1,10 @@
+## 0.2.3-dev.1
+
+Compatibility pre-release
+* gradle 6.9.2
+* com.android.tools.build:gradle:4.2.2
+* java 1.8
+
 ## 0.2.2
 
 * web_socket_support_platform_interface version bumped to 0.3.0

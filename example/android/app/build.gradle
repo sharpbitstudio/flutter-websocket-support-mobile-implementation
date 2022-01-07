@@ -29,7 +29,7 @@ ext {
     desugar_jdk_libs_version = '1.1.5'
 }
 
-import static org.gradle.api.JavaVersion.VERSION_11
+import static org.gradle.api.JavaVersion.VERSION_1_8
 android {
     compileSdkVersion 31
 
@@ -42,8 +42,8 @@ android {
         // Flag to enable support for the new language APIs
         coreLibraryDesugaringEnabled true
         // Sets Java compatibility to Java 8
-        sourceCompatibility VERSION_11
-        targetCompatibility VERSION_11
+        sourceCompatibility VERSION_1_8
+        targetCompatibility VERSION_1_8
     }
 
     defaultConfig {
