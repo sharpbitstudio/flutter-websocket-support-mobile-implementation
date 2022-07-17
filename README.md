@@ -38,6 +38,8 @@ or see /example/lib/main.dart
 - Java version: 11
 - AGP version: 7.2.x
 - Gradle version: 7.4.2
+- Android SDK min version: 21
+- Android SDK target version: 32
 
 ## TODO
 Unfortunately, iOS implementation is still missing. So, if you have know-how, and you're willing to implement it - you will be more than welcomed. Preffered WebSocket libs are [NWWebSocket](https://github.com/pusher/NWWebSocket) and [Starscream](https://github.com/daltoniam/Starscream), but we are opened for other options as well.
