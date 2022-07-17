@@ -2,19 +2,19 @@ name: web_socket_support
 description: Flutter plugin for utilising OkHttp websocket implementation on Android. Supports
   text and binary messages. Works even when app is in background or when screen is locked.
 homepage: https://github.com/sharpbitstudio/flutter-websocket-support-mobile-implementation
-version: 0.2.2
+version: 0.2.3
 
 environment:
-  sdk: ">=2.14.4 <3.0.0"
-  flutter: ">=2.5.3"
+  sdk: ">=2.12.0 <3.0.0"
+  flutter: ">=1.16.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  plugin_platform_interface: ^2.0.2
+  plugin_platform_interface: ^2.1.2
   web_socket_support_platform_interface: ^0.3.0
   meta: ^1.7.0
-  async: ^2.8.1
+  async: ^2.8.2
 
 dev_dependencies:
   flutter_test:

@@ -3,15 +3,15 @@ package tech.sharpbitstudio.web_socket_support;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+
 import androidx.annotation.NonNull;
+
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodChannel;
 import okhttp3.OkHttpClient;
 
-/**
- * WebSocketSupportPlugin
- */
+/** WebSocketSupportPlugin */
 public class WebSocketSupportPlugin implements FlutterPlugin {
 
   private static final String TAG = "WebSocketSupportPlugin";
@@ -38,21 +38,28 @@ public class WebSocketSupportPlugin implements FlutterPlugin {
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
     // set plugin channels
     // method channel
-    methodChannel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(),
-        METHOD_CHANNEL_NAME);
+    methodChannel =
+        new MethodChannel(flutterPluginBinding.getBinaryMessenger(), METHOD_CHANNEL_NAME);
 
     // text messages channel
-    textMessageChannel = new EventChannel(flutterPluginBinding.getBinaryMessenger(),
-        EVENT_CHANNEL_NAME_TEXT_MESSAGES);
+    textMessageChannel =
+        new EventChannel(
+            flutterPluginBinding.getBinaryMessenger(), EVENT_CHANNEL_NAME_TEXT_MESSAGES);
 
     // binary messages channel
-    binaryMessageChannel = new EventChannel(flutterPluginBinding.getBinaryMessenger(),
-        EVENT_CHANNEL_NAME_BINARY_MESSAGES);
+    binaryMessageChannel =
+        new EventChannel(
+            flutterPluginBinding.getBinaryMessenger(), EVENT_CHANNEL_NAME_BINARY_MESSAGES);
 
     // create WebSocketClient
-    webSocketClient = new WebSocketClient(okHttpClient,
-        new Handler(Looper.getMainLooper()), new ClientConfigurator(),
-        methodChannel, textMessageChannel, binaryMessageChannel);
+    webSocketClient =
+        new WebSocketClient(
+            okHttpClient,
+            new Handler(Looper.getMainLooper()),
+            new ClientConfigurator(),
+            methodChannel,
+            textMessageChannel,
+            binaryMessageChannel);
 
     // log success
     Log.i(TAG, "WebSocketSupportPlugin successfully initialized.");

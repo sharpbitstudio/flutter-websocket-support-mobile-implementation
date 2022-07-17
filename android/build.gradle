@@ -3,8 +3,8 @@ version '0.0.1'
 
 buildscript {
   ext {
-    android_build_gradle_version = '7.0.4'
-    ben_manes_version = '0.40.0'
+    android_build_gradle_version = '7.2.1'
+    ben_manes_version = '0.42.0'
   }
   repositories {
     google()
@@ -19,11 +19,11 @@ buildscript {
 
 ext {
   lifecycle_version = "2.2.0"
-  okhttp_version = '5.0.0-alpha.3'
-  lombok_version = '1.18.22'
+  okhttp_version = '5.0.0-alpha.10'
+  lombok_version = '1.18.24'
 
   // java desugar
-  desugar_jdk_libs_version = '1.1.5'
+  desugar_jdk_libs_version = '1.1.5'  // 1.2.0 requires min com.android.tools.build:gradle:7.3.x
 
   // junit
   junit_version = '5.7.0'
@@ -45,7 +45,7 @@ apply from: "${project.getProjectDir()}/jacoco.gradle"
 
 import static org.gradle.api.JavaVersion.VERSION_11
 android {
-  compileSdkVersion 31
+  compileSdkVersion 32
   compileOptions {
     // Flag to enable support for the new language APIs
     coreLibraryDesugaringEnabled true
@@ -54,8 +54,8 @@ android {
     targetCompatibility VERSION_11
   }
   defaultConfig {
-    minSdkVersion 24
-    targetSdkVersion 31
+    minSdkVersion 21
+    targetSdkVersion 32
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
   }
   lintOptions {

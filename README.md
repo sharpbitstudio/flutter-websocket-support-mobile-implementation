@@ -32,8 +32,15 @@ _webSocketConnection.sendTextMessage('Hello from Websocket support');
 
 or see /example/lib/main.dart
 
+## Build Dependencies
+- Dart SDK version: >=2.12.0 <3.0.0
+- Flutter SDK version: >=1.16.0
+- Java version: 11
+- AGP version: 7.2.x
+- Gradle version: 7.4.2
+
 ## TODO
-Unfortunately, iOS implementation is still missing. So, if you know-how and willing to implement it - you will be more than welcomed. Preffered WebSocket libs are [NWWebSocket](https://github.com/pusher/NWWebSocket) and [Starscream](https://github.com/daltoniam/Starscream).
+Unfortunately, iOS implementation is still missing. So, if you have know-how, and you're willing to implement it - you will be more than welcomed. Preffered WebSocket libs are [NWWebSocket](https://github.com/pusher/NWWebSocket) and [Starscream](https://github.com/daltoniam/Starscream), but we are opened for other options as well.
 
 ## Contributing
 See the Contributing guide for details on contributing to this project.
