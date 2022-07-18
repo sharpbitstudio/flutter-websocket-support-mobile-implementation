@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      CODECOV_TOKEN: d0662294-ec4b-40c5-8cb6-cf8ccd8d276c
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
