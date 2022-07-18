@@ -33,7 +33,7 @@ _webSocketConnection.sendTextMessage('Hello from Websocket support');
 or see /example/lib/main.dart
 
 ## Build Dependencies
-- Dart SDK version: >=2.12.0 <3.0.0
+- Dart SDK version: >=2.20.0 <3.0.0
 - Flutter SDK version: >=1.16.0
 - Java version: 11
 - AGP version: 7.2.x
