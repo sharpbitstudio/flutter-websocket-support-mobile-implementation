@@ -26,17 +26,13 @@ apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 ext {
     // java desugar
-    desugar_jdk_libs_version = '1.1.5'
+    desugar_jdk_libs_version = '1.1.5'  // 1.2.0 requires min com.android.tools.build:gradle:7.3.x
 }
 
 import static org.gradle.api.JavaVersion.VERSION_11
 android {
-    compileSdkVersion 31
+    compileSdkVersion 32
 
-    lintOptions {
-        checkDependencies true
-        disable 'InvalidPackage'
-    }
 
     compileOptions {
         // Flag to enable support for the new language APIs
@@ -49,8 +45,8 @@ android {
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId "tech.sharpbitstudio.web_socket_support_example"
-        minSdkVersion 24
-        targetSdkVersion 31
+        minSdkVersion 21
+        targetSdkVersion 32
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
@@ -64,6 +60,10 @@ android {
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig signingConfigs.debug
         }
+    }
+    lint {
+        checkDependencies true
+        disable 'InvalidPackage'
     }
 }
 

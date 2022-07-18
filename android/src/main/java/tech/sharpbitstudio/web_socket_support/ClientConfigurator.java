@@ -1,10 +1,12 @@
 package tech.sharpbitstudio.web_socket_support;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
+
 import okhttp3.OkHttpClient;
-import org.jetbrains.annotations.NotNull;
 
 public class ClientConfigurator {
 
@@ -12,7 +14,9 @@ public class ClientConfigurator {
 
   public OkHttpClient configure(@NotNull OkHttpClient okHttpClient, Map<String, Object> options) {
     // TODO: ws client needs to be customized based on options parameter
-    return okHttpClient.newBuilder()
-        .pingInterval(Duration.of(PING_INTERVAL_SEC, ChronoUnit.SECONDS)).build();
+    return okHttpClient
+        .newBuilder()
+        .pingInterval(Duration.of(PING_INTERVAL_SEC, ChronoUnit.SECONDS))
+        .build();
   }
 }

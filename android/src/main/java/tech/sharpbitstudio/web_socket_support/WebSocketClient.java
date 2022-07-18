@@ -13,23 +13,27 @@ import static tech.sharpbitstudio.web_socket_support.domain.Constants.OUT_METHOD
 
 import android.os.Handler;
 import android.util.Log;
+
 import androidx.annotation.NonNull;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Map;
+import java.util.Objects;
+
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.EventChannel.EventSink;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
-import java.util.Map;
-import java.util.Objects;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 import okio.ByteString;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import tech.sharpbitstudio.web_socket_support.domain.SystemEventContext;
 import tech.sharpbitstudio.web_socket_support.domain.SystemEventType;
 import tech.sharpbitstudio.web_socket_support.handlers.WebSocketStreamHandler;
@@ -54,8 +58,11 @@ public class WebSocketClient extends WebSocketListener implements MethodCallHand
   private int delayedConnectAttempt;
 
   // constructor
-  public WebSocketClient(@NonNull OkHttpClient okHttpClient, @NonNull Handler mainThreadHandler,
-      @NonNull ClientConfigurator clientConfigurator, @NonNull MethodChannel methodChannel,
+  public WebSocketClient(
+      @NonNull OkHttpClient okHttpClient,
+      @NonNull Handler mainThreadHandler,
+      @NonNull ClientConfigurator clientConfigurator,
+      @NonNull MethodChannel methodChannel,
       @NonNull EventChannel textMessageEventChannel,
       @NonNull EventChannel binaryMessageEventChannel) {
     this.okHttpClient = okHttpClient;
@@ -67,116 +74,134 @@ public class WebSocketClient extends WebSocketListener implements MethodCallHand
     this.methodChannel.setMethodCallHandler(this);
 
     // setup textStreamHandler and subscribe to textMessageEventChannel
-    textMessageEventChannel.setStreamHandler(new WebSocketStreamHandler((args, sink) -> {
-      textMessagesEventSink = sink;
-      Log.i(TAG, "TextMessageEventSink set -> arguments:" + args);
-    }, (args) -> {
-      textMessagesEventSink = null;
-      Log.i(TAG, "TextMessageEventSink removed -> arguments:" + args);
-    }));
+    textMessageEventChannel.setStreamHandler(
+        new WebSocketStreamHandler(
+            (args, sink) -> {
+              textMessagesEventSink = sink;
+              Log.i(TAG, "TextMessage EventSink activated! [arguments:" + args + "]");
+            },
+            (args) -> {
+              textMessagesEventSink = null;
+              Log.i(TAG, "TextMessage EventSink removed! [arguments:" + args + "]");
+            }));
 
     // setup binaryStreamHandler and subscribe to binaryMessageEventChannel
-    binaryMessageEventChannel.setStreamHandler(new WebSocketStreamHandler((args, sink) -> {
-      byteMessagesEventSink = sink;
-      Log.i(TAG, "setBinaryMessageEventSink -> arguments:" + args);
-    }, (args) -> {
-      byteMessagesEventSink = null;
-      Log.i(TAG, "removeBinaryMessageEventSink -> arguments:" + args);
-    }));
+    binaryMessageEventChannel.setStreamHandler(
+        new WebSocketStreamHandler(
+            (args, sink) -> {
+              byteMessagesEventSink = sink;
+              Log.i(TAG, "BinaryMessage EventSink activated! [arguments:" + args + "]");
+            },
+            (args) -> {
+              byteMessagesEventSink = null;
+              Log.i(TAG, "BinaryMessage EventSink removed! [arguments:" + args + "]");
+            }));
 
     Log.i(TAG, "WebSocketClient created.");
   }
 
   @Override
   public void onOpen(@NotNull WebSocket webSocket, @NotNull Response response) {
-    Log.i(TAG, "WS connected. WebSocket:" + webSocket.toString());
+    Log.i(TAG, "WS connected. [instance hash:" + webSocket.hashCode() + "]");
     this.webSocket = webSocket;
     this.delayedConnectAttempt = 0;
 
     // notify flutter about onOpen event
-    mainThreadHandler.post(() -> methodChannel
-        .invokeMethod(SystemEventType.WS_OPENED.getMethodName(),
-            SystemEventContext.builder().build().toMap()));
+    mainThreadHandler.post(
+        () ->
+            methodChannel.invokeMethod(
+                SystemEventType.WS_OPENED.getMethodName(),
+                SystemEventContext.builder().build().toMap()));
   }
 
   @Override
   public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
     Log.d(TAG, "Text message received. content:" + text);
-    mainThreadHandler.post(() -> {
-      if (textMessagesEventSink != null) {
-        try {
-          textMessagesEventSink.success(text);
-        } catch (Exception e) {
-          // sending system error should be critical
-          Log.e(TAG, "Exception while trying to send data to text channel.");
-          throw e;
-        }
-      } else {
-        // fall back to method call
-        Log.i(TAG, "TextMessagesEventSink was null! Falling back to method call.");
-        methodChannel.invokeMethod(OUT_METHOD_NAME_ON_STRING_MSG, text);
-      }
-    });
+    mainThreadHandler.post(
+        () -> {
+          if (textMessagesEventSink != null) {
+            try {
+              textMessagesEventSink.success(text);
+            } catch (Exception e) {
+              // sending system error should be critical
+              Log.e(TAG, "Exception while trying to send data to text channel.");
+              throw e;
+            }
+          } else {
+            // fall back to method call
+            Log.i(TAG, "TextMessagesEventSink was null! Falling back to method call.");
+            methodChannel.invokeMethod(OUT_METHOD_NAME_ON_STRING_MSG, text);
+          }
+        });
   }
 
   @Override
   public void onMessage(@NotNull WebSocket webSocket, @NotNull ByteString byteString) {
     Log.d(TAG, "Byte message received. size:" + byteString.size());
-    mainThreadHandler.post(() -> {
-      if (byteMessagesEventSink != null) {
-        try {
-          byteMessagesEventSink.success(byteString.toByteArray());
-        } catch (Exception e) {
-          // sending system error should be critical
-          Log.e(TAG, "Exception while trying to send data to byte channel.");
-          throw e;
-        }
-      } else {
-        // fall back to method call
-        Log.i(TAG, "ByteMessagesEventSink was null! Falling back to method call.");
-        methodChannel.invokeMethod(OUT_METHOD_NAME_ON_BYTE_ARRAY_MSG, byteString.toByteArray());
-      }
-    });
+    mainThreadHandler.post(
+        () -> {
+          if (byteMessagesEventSink != null) {
+            try {
+              byteMessagesEventSink.success(byteString.toByteArray());
+            } catch (Exception e) {
+              // sending system error should be critical
+              Log.e(TAG, "Exception while trying to send data to byte channel.");
+              throw e;
+            }
+          } else {
+            // fall back to method call
+            Log.i(TAG, "ByteMessagesEventSink was null! Falling back to method call.");
+            methodChannel.invokeMethod(OUT_METHOD_NAME_ON_BYTE_ARRAY_MSG, byteString.toByteArray());
+          }
+        });
   }
 
   @Override
   public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
     Log.i(TAG, "WS is about to close. Code:" + code + ", Reason:" + reason);
-    mainThreadHandler.post(() -> methodChannel
-        .invokeMethod(SystemEventType.WS_CLOSING.getMethodName(),
-            SystemEventContext.builder().closeCode(code).closeReason(reason).build().toMap()));
+    mainThreadHandler.post(
+        () ->
+            methodChannel.invokeMethod(
+                SystemEventType.WS_CLOSING.getMethodName(),
+                SystemEventContext.builder().closeCode(code).closeReason(reason).build().toMap()));
   }
 
   @Override
   public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
     Log.i(TAG, "WS closed. Code:" + code + ", Reason:" + reason);
-    mainThreadHandler.post(() -> {
-      methodChannel.invokeMethod(SystemEventType.WS_CLOSED.getMethodName(),
-          SystemEventContext.builder().closeCode(code).closeReason(reason).build().toMap());
-      cleanUpOnClose();
-    });
+    mainThreadHandler.post(
+        () -> {
+          methodChannel.invokeMethod(
+              SystemEventType.WS_CLOSED.getMethodName(),
+              SystemEventContext.builder().closeCode(code).closeReason(reason).build().toMap());
+          cleanUpOnClose();
+        });
   }
 
   @Override
-  public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t,
-      @Nullable Response response) {
+  public void onFailure(
+      @NotNull WebSocket webSocket, @NotNull Throwable t, @Nullable Response response) {
     Log.e(TAG, "Error occurred on ws channel. Error:" + t.getMessage() + ". Response:" + response);
-    mainThreadHandler.post(() -> {
-      final Map<String, Object> context = SystemEventContext.builder()
-          .throwableType(t.getClass().getSimpleName())
-          .errorMessage(t.getMessage())
-          .causeMessage(t.getCause() != null ? t.getCause().toString() : null).build().toMap();
-      methodChannel.invokeMethod(SystemEventType.WS_FAILURE.getMethodName(), context);
-      cleanUpOnClose();
-    });
+    mainThreadHandler.post(
+        () -> {
+          final Map<String, Object> context =
+              SystemEventContext.builder()
+                  .throwableType(t.getClass().getSimpleName())
+                  .errorMessage(t.getMessage())
+                  .causeMessage(t.getCause() != null ? t.getCause().toString() : null)
+                  .build()
+                  .toMap();
+          methodChannel.invokeMethod(SystemEventType.WS_FAILURE.getMethodName(), context);
+          cleanUpOnClose();
+        });
   }
 
   /**
    * Handles calls from Flutter (via Platform channel)
-   * <p/>
-   * {@inheritDoc}
    *
-   * @param call   MethodCall
+   * <p>{@inheritDoc}
+   *
+   * @param call MethodCall
    * @param result Result
    */
   @Override
@@ -184,58 +209,62 @@ public class WebSocketClient extends WebSocketListener implements MethodCallHand
 
     switch (call.method) {
 
-      // connect
-      case IN_METHOD_NAME_CONNECT: {
+        // connect
+      case IN_METHOD_NAME_CONNECT:
+        {
 
-        // get arguments from call
-        final String url = call.argument(ARGUMENT_URL);
-        final Map<String, Object> options = call.argument(ARGUMENT_OPTIONS);
+          // get arguments from call
+          final String url = call.argument(ARGUMENT_URL);
+          final Map<String, Object> options = call.argument(ARGUMENT_OPTIONS);
 
-        // connect to WS server
-        connect(Objects.requireNonNull(url), options);
-        result.success(true);
-        break;
-      }
-
-      // disconnect
-      case IN_METHOD_NAME_DISCONNECT: {
-
-        // get arguments from call
-        final Integer code = call.argument(ARGUMENT_CODE);
-        final String reason = call.argument(ARGUMENT_REASON);
-
-        disconnect(code, reason);
-        result.success(true);
-        break;
-      }
-
-      // send text message
-      case IN_METHOD_NAME_SEND_STRING_MSG: {
-        final String message = call.arguments();
-        if (sendTextMessage(message)) {
+          // connect to WS server
+          connect(Objects.requireNonNull(url), options);
           result.success(true);
-        } else {
-          // TODO: error code should be reconsidered
-          Log.e(TAG, "Unable to send text message to Ws server!");
-          result.error("01", "Unable to send text message!", null);
+          break;
         }
-        break;
-      }
 
-      // send byte message
-      case IN_METHOD_NAME_SEND_BYTE_ARRAY_MSG: {
-        final byte[] message = call.arguments();
-        if (sendByteMessage(ByteString.of(message != null ? message : new byte[0]))) {
+        // disconnect
+      case IN_METHOD_NAME_DISCONNECT:
+        {
+
+          // get arguments from call
+          final Integer code = call.argument(ARGUMENT_CODE);
+          final String reason = call.argument(ARGUMENT_REASON);
+
+          disconnect(code, reason);
           result.success(true);
-        } else {
-          // TODO: error code should be reconsidered
-          Log.e(TAG, "Unable to send binary message to Ws server!");
-          result.error("02", "Unable to send binary message!", null);
+          break;
         }
-        break;
-      }
 
-      // if unexpected (all non specified methods)
+        // send text message
+      case IN_METHOD_NAME_SEND_STRING_MSG:
+        {
+          final String message = call.arguments();
+          if (sendTextMessage(message)) {
+            result.success(true);
+          } else {
+            // TODO: error code should be reconsidered
+            Log.e(TAG, "Unable to send text message to Ws server!");
+            result.error("01", "Unable to send text message!", null);
+          }
+          break;
+        }
+
+        // send byte message
+      case IN_METHOD_NAME_SEND_BYTE_ARRAY_MSG:
+        {
+          final byte[] message = call.arguments();
+          if (sendByteMessage(ByteString.of(message != null ? message : new byte[0]))) {
+            result.success(true);
+          } else {
+            // TODO: error code should be reconsidered
+            Log.e(TAG, "Unable to send binary message to Ws server!");
+            result.error("02", "Unable to send binary message!", null);
+          }
+          break;
+        }
+
+        // if unexpected (all non specified methods)
       default:
         Log.w(TAG, "Unexpected MethodCall: " + call.method);
         result.notImplemented();
@@ -252,14 +281,14 @@ public class WebSocketClient extends WebSocketListener implements MethodCallHand
 
   /**
    * Used to customize OkHttpClient and connect to WS Endpoint.
-   * <p>
-   * Creates a new web socket and immediately returns it. Creating a web socket initiates an
+   *
+   * <p>Creates a new web socket and immediately returns it. Creating a web socket initiates an
    * asynchronous process to connect the socket. Once that succeeds or fails, `listener` will be
    * notified. The caller must either close or cancel the returned web socket when it is no longer
    * in use.
    *
    * @param serverUrl server URL.
-   * @param options   key-value map data used to configure connection.
+   * @param options key-value map data used to configure connection.
    */
   private void connect(String serverUrl, Map<String, Object> options) {
 
@@ -275,9 +304,7 @@ public class WebSocketClient extends WebSocketListener implements MethodCallHand
     this.autoReconnect = (boolean) options.computeIfAbsent("autoReconnect", (s) -> false);
 
     // prepare request
-    final Request request = new Request.Builder()
-        .url(serverUrl)
-        .build();
+    final Request request = new Request.Builder().url(serverUrl).build();
 
     // customize default ws client
     final OkHttpClient client = clientConfigurator.configure(okHttpClient, options);
@@ -307,10 +334,10 @@ public class WebSocketClient extends WebSocketListener implements MethodCallHand
    * Attempts to initiate a graceful shutdown of this web socket. Any already-enqueued messages will
    * be transmitted before the close message is sent but subsequent calls to send will return false
    * and their messages will not be enqueued.
-   * <p>
-   * Close code sent to server will be 1000.
    *
-   * @param code   disconnection code
+   * <p>Close code sent to server will be 1000.
+   *
+   * @param code disconnection code
    * @param reason Reason to disconnect
    */
   private void disconnect(Integer code, String reason) {
@@ -324,11 +351,11 @@ public class WebSocketClient extends WebSocketListener implements MethodCallHand
 
   /**
    * Sends String message to server via established WebSocket connection.
-   * <p>
-   * This method returns true if the message was enqueued. Messages that would overflow the outgoing
-   * message buffer will be rejected and trigger a graceful shutdown of this web socket. This method
-   * returns false in that case, and in any other case where this web socket is closing, closed, or
-   * canceled.
+   *
+   * <p>This method returns true if the message was enqueued. Messages that would overflow the
+   * outgoing message buffer will be rejected and trigger a graceful shutdown of this web socket.
+   * This method returns false in that case, and in any other case where this web socket is closing,
+   * closed, or canceled.
    *
    * @param message String message to send to server
    * @return true if successful
@@ -344,11 +371,11 @@ public class WebSocketClient extends WebSocketListener implements MethodCallHand
 
   /**
    * Send ByteString to server via established WebSocket connection.
-   * <p>
-   * This method returns true if the message was enqueued. Messages that would overflow the outgoing
-   * message buffer (16 MiB) will be rejected and trigger a graceful shutdown of this web socket.
-   * This method returns false in that case, and in any other case where this web socket is closing,
-   * closed, or canceled. This method returns immediately.
+   *
+   * <p>This method returns true if the message was enqueued. Messages that would overflow the
+   * outgoing message buffer (16 MiB) will be rejected and trigger a graceful shutdown of this web
+   * socket. This method returns false in that case, and in any other case where this web socket is
+   * closing, closed, or canceled. This method returns immediately.
    *
    * @param message ByteString message to send to server
    * @return true if successful

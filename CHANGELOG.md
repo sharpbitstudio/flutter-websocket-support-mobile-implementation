@@ -1,3 +1,9 @@
+## 0.2.3
+
+* gradle dependencies update
+* dart dependencies update
+* added build dependencies to README.md
+
 ## 0.2.2
 
 * web_socket_support_platform_interface version bumped to 0.3.0

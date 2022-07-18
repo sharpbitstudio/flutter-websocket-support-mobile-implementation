@@ -2,8 +2,7 @@ package tech.sharpbitstudio.web_socket_support.domain;
 
 public class Constants {
 
-  private Constants() {
-  }
+  private Constants() {}
 
   public static final String METHOD_PLATFORM_VERSION = "getPlatformVersion";
 
