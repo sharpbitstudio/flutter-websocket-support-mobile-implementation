@@ -32,8 +32,6 @@ ext {
 import static org.gradle.api.JavaVersion.VERSION_11
 android {
     compileSdkVersion 32
-
-
     compileOptions {
         // Flag to enable support for the new language APIs
         coreLibraryDesugaringEnabled true
