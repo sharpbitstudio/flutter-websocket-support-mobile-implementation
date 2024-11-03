@@ -29,7 +29,7 @@ ext {
     desugar_jdk_libs_version = '2.1.2'
 }
 
-import static org.gradle.api.JavaVersion.VERSION_11
+import static org.gradle.api.JavaVersion.VERSION_17
 android {
     // compileSdkVersion 34  // deprecated
 
@@ -37,9 +37,9 @@ android {
         compileSdk 34
         // Flag to enable support for the new language APIs
         coreLibraryDesugaringEnabled true
-        // Sets Java compatibility to Java 11
-        sourceCompatibility VERSION_11
-        targetCompatibility VERSION_11
+        // Sets Java compatibility to Java 17
+        sourceCompatibility VERSION_17
+        targetCompatibility VERSION_17
     }
 
     defaultConfig {

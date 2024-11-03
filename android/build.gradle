@@ -44,15 +44,15 @@ apply plugin: 'com.github.ben-manes.versions'
 // jacoco
 apply from: "${project.getProjectDir()}/jacoco.gradle"
 
-import static org.gradle.api.JavaVersion.VERSION_11
+import static org.gradle.api.JavaVersion.VERSION_17
 android {
 //  compileSdkVersion 34
   compileOptions {
     // Flag to enable support for the new language APIs
     coreLibraryDesugaringEnabled true
-    // Sets Java compatibility to Java 11
-    sourceCompatibility VERSION_11
-    targetCompatibility VERSION_11
+    // Sets Java compatibility to Java 17
+    sourceCompatibility VERSION_17
+    targetCompatibility VERSION_17
   }
   defaultConfig {
     compileSdk 34

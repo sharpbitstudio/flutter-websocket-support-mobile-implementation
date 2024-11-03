@@ -35,7 +35,7 @@ or see [example](example/lib/main.dart) for more details.
 ## Build Dependencies
 - Dart SDK version: >=2.16.0 <4.0.0
 - Flutter SDK version: >=2.10.0
-- Java version: 11
+- Java version: >=17
 - AGP version: 8.7.x
 - Gradle version: 8.9.x
 - Android SDK min version: 27
