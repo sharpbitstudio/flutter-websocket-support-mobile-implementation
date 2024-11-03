@@ -1,3 +1,9 @@
+## 0.2.4
+
+* gradle dependencies update
+* dart dependencies update
+* bugfix: exposed `WebSocketOptions` so that `connect` method can be used with options parameter
+
 ## 0.2.3
 
 * gradle dependencies update

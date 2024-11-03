@@ -1,7 +1,8 @@
+
 apply plugin: 'jacoco'
 
 jacoco {
-    toolVersion = "0.8.7"
+    toolVersion = "0.8.12"
 }
 
 private static boolean isAndroidModule(Project project) {
@@ -23,7 +24,7 @@ def setupKotlinReporting() {
             xml.enabled false // change if needed
             html {
                 enabled true
-                destination file("${buildDir}/coverage-report")
+                destination file("${rootProject.layout.buildDirectory}/coverage-report")
             }
         }
     }
@@ -31,45 +32,46 @@ def setupKotlinReporting() {
 
 def setupAndroidReporting() {
 
-    tasks.withType(Test) {
+    tasks.withType(Test).configureEach {
         // Whether or not classes without source location should be instrumented
         jacoco {
             includeNoLocationClasses true
-            excludes = ['jdk.internal.*'] // see related issue https://github.com/gradle/gradle/issues/5184#issuecomment-457865951
+            excludes = ['jdk.internal.*']
+            // see related issue https://github.com/gradle/gradle/issues/5184#issuecomment-457865951
         }
     }
 
-    task jacocoTestReport (
-            type: JacocoReport,
-            group: 'reporting',
-            description: 'Generate Jacoco report',
-            dependsOn: ['testDebugUnitTest']
-    ) {
+    tasks.register('jacocoTestReport', JacocoReport) {
+        dependsOn['testDebugUnitTest']
         reports {
-            csv.enabled false
-            xml.enabled true
+            csv {
+                setEnabled false
+            }
+            xml {
+                setEnabled true
+            }
             html {
                 enabled true
-                destination file("${buildDir}/coverage-report")
+                destination file("${rootProject.layout.buildDirectory}/coverage-report")
             }
         }
 
         // Change as needed
         def fileFilter = [
-            '**/*App.*',
-            '**/*Application.*',
-            '**/*Activity.*',
-            '**/*Fragment.*',
-            '**/*JsonAdapter.*',
-            '**/di/**',
-            '**/*Dagger.*',
-            '**/BuildConfig.*',
-            // project specific
-            '**/web_socket_support/domain/**',
+                '**/*App.*',
+                '**/*Application.*',
+                '**/*Activity.*',
+                '**/*Fragment.*',
+                '**/*JsonAdapter.*',
+                '**/di/**',
+                '**/*Dagger.*',
+                '**/BuildConfig.*',
+                // project specific
+                '**/web_socket_support/domain/**',
         ]
 
         // java compiled classes
-        def javaTree = fileTree(dir: "$buildDir/intermediates/javac/debug/classes", excludes: fileFilter)
+        def javaTree = fileTree(dir: "$rootProject.layout.buildDirectory/intermediates/javac/debug/classes", excludes: fileFilter)
         classDirectories.from = files([javaTree])
 
         // sources
@@ -78,10 +80,10 @@ def setupAndroidReporting() {
 
         // execution
         executionData.from = fileTree(
-            dir: project.buildDir,
-            includes: [
-                'jacoco/testDebugUnitTest.exec',
-            ]
+                dir: rootProject.layout.buildDirectory,
+                includes: [
+                        'jacoco/testDebugUnitTest.exec',
+                ]
         )
     }
 

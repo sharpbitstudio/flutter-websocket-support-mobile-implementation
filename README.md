@@ -19,27 +19,27 @@ WebSocketConnection _webSocketConnection;
 // Of course you can use you own WebSocketListener implementation
 final WebSocketClient _wsClient = WebSocketClient(DefaultWebSocketListener.forTextMessages(
         (wsc) => _webSocketConnection = wsc,                       // _onWsOpen callback
-        (code, msg) => print('Connection closed. Resaon: $msg'),  // _onWsClosed callback
+        (code, msg) => print('Connection closed. Reason: $msg'),  // _onWsClosed callback
         (msg) => print('Message received: $msg')));               // _onStringMessage callback
 // ...
 // connect to remote ws endpoint
-await _wsClient.connect("ws://echo.websocket.org");
+await _wsClient.connect('ws://echo.websocket.org', options: WebSocketOptions(autoReconnect: true);
 
 // ...
 // After connection is established, use obtained WebSocketConnection instance to send messages
 _webSocketConnection.sendTextMessage('Hello from Websocket support');
 ````
 
-or see /example/lib/main.dart
+or see [example](example/lib/main.dart) for more details.
 
 ## Build Dependencies
-- Dart SDK version: >=2.12.0 <3.0.0
-- Flutter SDK version: >=1.20.0
+- Dart SDK version: >=2.16.0 <4.0.0
+- Flutter SDK version: >=2.10.0
 - Java version: 11
-- AGP version: 7.2.x
-- Gradle version: 7.4.2
-- Android SDK min version: 21
-- Android SDK target version: 32
+- AGP version: 8.7.x
+- Gradle version: 8.9.x
+- Android SDK min version: 27
+- Android SDK target version: 34
 
 ## TODO
 Unfortunately, iOS implementation is still missing. So, if you have know-how, and you're willing to implement it - you will be more than welcomed. Preffered WebSocket libs are [NWWebSocket](https://github.com/pusher/NWWebSocket) and [Starscream](https://github.com/daltoniam/Starscream), but we are opened for other options as well.

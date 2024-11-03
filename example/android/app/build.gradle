@@ -26,18 +26,18 @@ apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 ext {
     // java desugar
-    desugar_jdk_libs_version = '1.1.5'  // 1.2.0 requires min com.android.tools.build:gradle:7.3.x
+    desugar_jdk_libs_version = '2.1.2'
 }
 
 import static org.gradle.api.JavaVersion.VERSION_11
 android {
-    compileSdkVersion 32
-
+//    compileSdkVersion 34  // deprecated
 
     compileOptions {
+        compileSdk 34
         // Flag to enable support for the new language APIs
         coreLibraryDesugaringEnabled true
-        // Sets Java compatibility to Java 8
+        // Sets Java compatibility to Java 11
         sourceCompatibility VERSION_11
         targetCompatibility VERSION_11
     }
@@ -45,26 +45,28 @@ android {
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId "tech.sharpbitstudio.web_socket_support_example"
-        minSdkVersion 21
-        targetSdkVersion 32
+        minSdkVersion 27
+        targetSdkVersion 34
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
 
     buildTypes {
-        debug{
-            testCoverageEnabled true
-        }
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig signingConfigs.debug
+        }
+        debug {
+            enableUnitTestCoverage true
+            enableAndroidTestCoverage true
         }
     }
     lint {
         checkDependencies true
         disable 'InvalidPackage'
     }
+    namespace 'tech.sharpbitstudio.web_socket_support_example'
 }
 
 flutter {
@@ -72,6 +74,6 @@ flutter {
 }
 
 dependencies {
-    androidTestImplementation 'androidx.test:runner:1.4.0'
+    androidTestImplementation 'androidx.test:runner:1.6.2'
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$desugar_jdk_libs_version"
 }

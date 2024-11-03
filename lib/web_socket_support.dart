@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:meta/meta.dart';
@@ -9,7 +8,7 @@ import 'package:web_socket_support_platform_interface/web_socket_listener.dart';
 import 'package:web_socket_support_platform_interface/web_socket_options.dart';
 import 'package:web_socket_support_platform_interface/web_socket_support_platform_interface.dart';
 
-export 'package:web_socket_support_platform_interface/web_scoket_exception.dart'
+export 'package:web_socket_support_platform_interface/web_socket_exception.dart'
     show WebSocketException;
 export 'package:web_socket_support_platform_interface/web_socket_connection.dart'
     show WebSocketConnection;
@@ -17,6 +16,8 @@ export 'package:web_socket_support_platform_interface/web_socket_connection.dart
 // so plugin users can use them directly.
 export 'package:web_socket_support_platform_interface/web_socket_listener.dart'
     show WebSocketListener;
+export 'package:web_socket_support_platform_interface/web_socket_options.dart'
+    show WebSocketOptions;
 
 class WebSocketClient extends WebSocketSupportPlatform {
   //
