@@ -32,7 +32,7 @@ public class WebSocketSupportPlugin implements FlutterPlugin {
   private WebSocketClient webSocketClient;
 
   // shared OkHttpClient
-  private final OkHttpClient okHttpClient = new OkHttpClient();
+  private static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
@@ -54,7 +54,7 @@ public class WebSocketSupportPlugin implements FlutterPlugin {
     // create WebSocketClient
     webSocketClient =
         new WebSocketClient(
-            okHttpClient,
+            OK_HTTP_CLIENT,
             new Handler(Looper.getMainLooper()),
             new ClientConfigurator(),
             methodChannel,

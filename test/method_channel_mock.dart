@@ -12,7 +12,7 @@ class MethodChannelMock {
     this.delay = Duration.zero,
     required this.methodMocks,
   }) : methodChannel = MethodChannel(channelName) {
-    TestDefaultBinaryMessengerBinding.instance!.defaultBinaryMessenger
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(methodChannel, _handler);
   }
 
@@ -43,7 +43,7 @@ class MethodChannelMock {
 
   void sendPlatformMessage(MethodCall methodCall) {
     final envelope = const StandardMethodCodec().encodeMethodCall(methodCall);
-    TestDefaultBinaryMessengerBinding.instance!.defaultBinaryMessenger
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .handlePlatformMessage(methodChannel.name, envelope, (data) {});
   }
 }

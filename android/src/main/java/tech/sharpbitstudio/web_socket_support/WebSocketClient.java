@@ -273,6 +273,7 @@ public class WebSocketClient extends WebSocketListener implements MethodCallHand
 
   public void terminate() {
     // TODO
+    disconnect(1001, "Client terminated");
     this.methodChannel.setMethodCallHandler(null);
     Log.i(TAG, "WebSocketClient terminated.");
   }

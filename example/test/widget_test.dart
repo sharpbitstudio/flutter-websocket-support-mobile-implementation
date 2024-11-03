@@ -42,7 +42,7 @@ void main() {
       return Future<void>.value(null);
     });
     when(mockedWs.sendMessage()).thenAnswer((realInvocation) {
-      backend.addMesage(
+      backend.addMessage(
           ServerMessage(backend.textController.text, DateTime.now()));
       mockedWs.notifyListeners();
     });

@@ -34,12 +34,12 @@ class WsBackend with ChangeNotifier {
     print('WsBackend created.');
   }
 
-  void addMesage(ServerMessage msg) {
+  void addMessage(ServerMessage msg) {
     _messages.add(msg);
     notifyListeners();
   }
 
-  void clearMesages() {
+  void clearMessages() {
     _messages.clear();
     notifyListeners();
   }
@@ -89,22 +89,22 @@ class WebSocketSupport with ChangeNotifier {
 
   void _onWsClosed(int code, String reason) {
     _webSocketConnection = null;
-    _backend.clearMesages();
+    _backend.clearMessages();
     working = false;
     notifyListeners();
   }
 
   void _onTextMessage(String message) {
-    _backend.addMesage(ServerMessage(message, DateTime.now()));
+    _backend.addMessage(ServerMessage(message, DateTime.now()));
     notifyListeners();
   }
 
   void _onError(Exception ex) {
-    print('_onError: Fatal error occured: $ex');
+    print('_onError: Fatal error occurred: $ex');
     _webSocketConnection = null;
     working = false;
-    _backend.addMesage(
-        ServerMessage('Error occured on WS connection!', DateTime.now()));
+    _backend.addMessage(
+        ServerMessage('Error occurred on WS connection!', DateTime.now()));
     notifyListeners();
   }
 
@@ -122,14 +122,15 @@ class WebSocketSupport with ChangeNotifier {
   Future<void> connect() async {
     working = true;
     _backend.textController.clear();
-    _backend.clearMesages();
+    _backend.clearMessages();
     try {
-      await _wsClient.connect(serverUrl);
+      await _wsClient.connect(serverUrl,
+          options: WebSocketOptions(autoReconnect: true));
       notifyListeners();
     } on PlatformException catch (e) {
       final errorMsg = 'Failed to connect to ws server. Error:$e';
       print(errorMsg);
-      _backend.addMesage(ServerMessage(errorMsg, DateTime.now()));
+      _backend.addMessage(ServerMessage(errorMsg, DateTime.now()));
     }
   }
 
@@ -142,7 +143,7 @@ class WebSocketSupport with ChangeNotifier {
 
 // ExampleApp uses WebSocketSupport to communicate with remote ws server
 // App is able to send arbitrary text messages to remote echo server
-// and will keep all remote servers replys in list as long as ws session is up.
+// and will keep all remote servers replays in list as long as ws session is up.
 class WebSocketSupportExampleApp extends StatelessWidget {
   const WebSocketSupportExampleApp({Key? key}) : super(key: key);
 
@@ -153,9 +154,9 @@ class WebSocketSupportExampleApp extends StatelessWidget {
         appBar: AppBar(
           title: const Text('WebSocketSupport example app'),
         ),
-        body: Column(
+        body: const Column(
           mainAxisAlignment: MainAxisAlignment.start,
-          children: const <Widget>[
+          children: <Widget>[
             WsControlPanel(),
             WsTextInput(),
             WsMessages(),

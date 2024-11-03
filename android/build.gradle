@@ -1,10 +1,11 @@
+
 group 'tech.sharpbitstudio.web_socket_support'
 version '0.0.1'
 
 buildscript {
   ext {
-    android_build_gradle_version = '7.2.1'
-    ben_manes_version = '0.42.0'
+    android_build_gradle_version = '8.7.2'
+    ben_manes_version = '0.51.0'
   }
   repositories {
     google()
@@ -19,15 +20,15 @@ buildscript {
 
 ext {
   lifecycle_version = "2.2.0"
-  okhttp_version = '5.0.0-alpha.10'
-  lombok_version = '1.18.24'
+  okhttp_version = '5.0.0-alpha.14'
+  lombok_version = '1.18.34'
 
   // java desugar
-  desugar_jdk_libs_version = '1.1.5'  // 1.2.0 requires min com.android.tools.build:gradle:7.3.x
+  desugar_jdk_libs_version = '2.1.2'
 
   // junit
   junit_version = '5.7.0'
-  mockito_version = '4.2.0'
+  mockito_version = '5.2.0'
 }
 
 rootProject.allprojects {
@@ -45,7 +46,7 @@ apply from: "${project.getProjectDir()}/jacoco.gradle"
 
 import static org.gradle.api.JavaVersion.VERSION_11
 android {
-  compileSdkVersion 32
+//  compileSdkVersion 34
   compileOptions {
     // Flag to enable support for the new language APIs
     coreLibraryDesugaringEnabled true
@@ -54,8 +55,8 @@ android {
     targetCompatibility VERSION_11
   }
   defaultConfig {
-    minSdkVersion 21
-    targetSdkVersion 32
+    compileSdk 34
+    minSdkVersion 27
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
   }
   lintOptions {
@@ -86,7 +87,6 @@ dependencies {
   coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$desugar_jdk_libs_version"
 
   // lombok
-  compileOnly "org.projectlombok:lombok:$lombok_version"
   annotationProcessor "org.projectlombok:lombok:$lombok_version"
 
   // tests

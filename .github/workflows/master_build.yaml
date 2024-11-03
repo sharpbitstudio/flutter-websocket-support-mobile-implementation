@@ -3,6 +3,7 @@ name: web_socket_support
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the develop branch
 on:
+  workflow_dispatch:
   push:
     branches: [ master ]
   pull_request:
@@ -15,16 +16,22 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    env:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+
+      # Set up JDK 17, Android Gradle plugin requires Java 17 to run.
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - run: java -version
       
       # Make sure the stable version of Flutter is available
-      - uses: subosito/flutter-action@v1
+      - uses: subosito/flutter-action@v2
         with:
           channel: 'stable' # or: 'beta' or 'dev'
 
@@ -33,8 +40,8 @@ jobs:
         run: flutter pub get
 
       # Run Flutter Format to ensure formatting is valid
-      - name: Run Flutter Format
-        run: flutter format --set-exit-if-changed lib
+      - name: Run Dart Format
+        run: dart format --set-exit-if-changed lib
 
       # Run Flutter Analyzer
       - name: Run Flutter Analyzer
@@ -55,9 +62,11 @@ jobs:
       #  working-directory: ./example
 
       # Upload code coverage information for flutter
-      - uses: codecov/codecov-action@v2
+      - uses: codecov/codecov-action@v4
         with:
+          fail_ci_if_error: true
           files: ./coverage/lcov.info,./example/build/web_socket_support/reports/jacoco/jacocoTestReport/jacocoTestReport.xml
           name: WebSocketSupport (Mobile Implementation) # optional
-          fail_ci_if_error: true
           verbose: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }} # required
