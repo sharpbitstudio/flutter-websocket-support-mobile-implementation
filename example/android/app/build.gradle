@@ -31,7 +31,7 @@ ext {
 
 import static org.gradle.api.JavaVersion.VERSION_11
 android {
-//    compileSdkVersion 34  // deprecated
+    // compileSdkVersion 34  // deprecated
 
     compileOptions {
         compileSdk 34
@@ -58,6 +58,7 @@ android {
             signingConfig signingConfigs.debug
         }
         debug {
+            testCoverageEnabled true
             enableUnitTestCoverage true
             enableAndroidTestCoverage true
         }
