@@ -36,10 +36,11 @@ allprojects {
     }
 }
 
-//rootProject.buildDir = '../build'
-//subprojects {
-//    project.buildDir = "${rootProject.buildDir}/${project.name}"
-//}
+// this is necessary for: flutter build apk --release
+rootProject.buildDir = '../build'
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
 subprojects {
     project.evaluationDependsOn(':app')
 }
