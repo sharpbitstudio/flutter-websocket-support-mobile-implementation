@@ -1,22 +1,10 @@
 
+plugins {
+  id "com.android.library"
+}
+
 group 'tech.sharpbitstudio.web_socket_support'
 version '0.0.1'
-
-buildscript {
-  ext {
-    android_build_gradle_version = '8.7.2'
-    ben_manes_version = '0.51.0'
-  }
-  repositories {
-    google()
-    mavenCentral()
-    gradlePluginPortal()
-  }
-  dependencies {
-    classpath "com.android.tools.build:gradle:$android_build_gradle_version"
-    classpath "com.github.ben-manes:gradle-versions-plugin:$ben_manes_version"
-  }
-}
 
 ext {
   lifecycle_version = "2.2.0"
@@ -24,32 +12,28 @@ ext {
   lombok_version = '1.18.34'
 
   // java desugar
-  desugar_jdk_libs_version = '2.1.2'
+  androidx_annotations_version = '1.9.1'
 
   // junit
   junit_version = '5.7.0'
-  mockito_version = '5.2.0'
+  mockito_version = '5.14.2'
 }
 
-rootProject.allprojects {
+allprojects {
   repositories {
     google()
     mavenCentral()
   }
 }
 
-apply plugin: 'com.android.library'
-apply plugin: 'com.github.ben-manes.versions'
-
 // jacoco
 apply from: "${project.getProjectDir()}/jacoco.gradle"
 
 import static org.gradle.api.JavaVersion.VERSION_11
 android {
-//  compileSdkVersion 34
   compileOptions {
     // Flag to enable support for the new language APIs
-    coreLibraryDesugaringEnabled true
+    coreLibraryDesugaringEnabled false
     // Sets Java compatibility to Java 11
     sourceCompatibility VERSION_11
     targetCompatibility VERSION_11
@@ -80,30 +64,22 @@ android {
       includeAndroidResources = true
     }
   }
+  namespace 'tech.sharpbitstudio.web_socket_support'
 }
 
 dependencies {
+
+  // androidx
+  implementation "androidx.annotation:annotation-jvm:$androidx_annotations_version"
+  runtimeOnly 'androidx.collection:collection:1.4.5'
+
+  // websocket implementation lib
   implementation "com.squareup.okhttp3:okhttp:$okhttp_version"
-  coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$desugar_jdk_libs_version"
 
   // lombok
   annotationProcessor "org.projectlombok:lombok:$lombok_version"
 
   // tests
   testImplementation 'junit:junit:4.13.2'
-  testImplementation group: 'org.mockito', name: 'mockito-inline', version: mockito_version
-}
-
-// ben-manes
-dependencyUpdates {
-
-  def isNonStable = { String version ->
-    def stableKeyword = ['RELEASE', 'FINAL', 'GA'].any { qualifier -> version.toUpperCase().contains(qualifier) }
-    def regex = /^[0-9,.v-]+(-r)?$/
-    return !stableKeyword && !(version ==~ regex)
-  }
-
-  rejectVersionIf {
-    isNonStable(it.candidate.version) && !isNonStable(it.currentVersion)
-  }
+  testImplementation "org.mockito:mockito-core:$mockito_version"
 }

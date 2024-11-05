@@ -2,6 +2,7 @@ package tech.sharpbitstudio.web_socket_support.domain;
 
 import androidx.annotation.NonNull;
 import androidx.collection.ArrayMap;
+
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
