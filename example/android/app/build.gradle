@@ -1,14 +1,16 @@
+
+plugins {
+    id "com.android.application"
+    id "dev.flutter.flutter-gradle-plugin"
+    id "com.github.ben-manes.versions"
+}
+
 def localProperties = new Properties()
 def localPropertiesFile = rootProject.file('local.properties')
 if (localPropertiesFile.exists()) {
     localPropertiesFile.withReader('UTF-8') { reader ->
         localProperties.load(reader)
     }
-}
-
-def flutterRoot = localProperties.getProperty('flutter.sdk')
-if (flutterRoot == null) {
-    throw new GradleException("Flutter SDK not found. Define location with flutter.sdk in the local.properties file.")
 }
 
 def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
@@ -21,22 +23,13 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
-apply plugin: 'com.android.application'
-apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
-
-ext {
-    // java desugar
-    desugar_jdk_libs_version = '2.1.2'
-}
-
 import static org.gradle.api.JavaVersion.VERSION_11
 android {
-    // compileSdkVersion 34  // deprecated
 
     compileOptions {
         compileSdk 34
         // Flag to enable support for the new language APIs
-        coreLibraryDesugaringEnabled true
+        coreLibraryDesugaringEnabled false
         // Sets Java compatibility to Java 11
         sourceCompatibility VERSION_11
         targetCompatibility VERSION_11
@@ -76,5 +69,18 @@ flutter {
 
 dependencies {
     androidTestImplementation 'androidx.test:runner:1.6.2'
-    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$desugar_jdk_libs_version"
+}
+
+// ben-manes
+dependencyUpdates {
+
+    def isNonStable = { String version ->
+        def stableKeyword = ['RELEASE', 'FINAL', 'GA'].any { qualifier -> version.toUpperCase().contains(qualifier) }
+        def regex = /^[0-9,.v-]+(-r)?$/
+        return !stableKeyword && !(version ==~ regex)
+    }
+
+    rejectVersionIf {
+        isNonStable(it.candidate.version) && !isNonStable(it.currentVersion)
+    }
 }

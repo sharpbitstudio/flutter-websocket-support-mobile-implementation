@@ -1,3 +1,9 @@
+## 0.2.5
+
+* core library desugaring not required anymore
+* updated unbelievably complex gradle build mechanism for component (in oder to align it with newer gradle and AGP)
+* added some androidx dependencies
+
 ## 0.2.4
 
 * gradle dependencies update

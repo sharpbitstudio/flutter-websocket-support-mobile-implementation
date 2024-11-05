@@ -43,12 +43,13 @@ import okio.ByteString;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
+
 import tech.sharpbitstudio.web_socket_support.domain.SystemEventType;
 
-@RunWith(JUnit4.class)
+@RunWith(MockitoJUnitRunner.class)
 public class WebSocketClientTest {
 
   // mocks
@@ -302,12 +303,6 @@ public class WebSocketClientTest {
 
     // stubbing
     final WebSocket mockedWebSocket = Mockito.mock(WebSocket.class);
-    when(mockedWebSocket.close(any(Integer.class), any(String.class)))
-        .then(invocation -> {
-          client.onClosed(Mockito.mock(WebSocket.class), invocation.getArgument(0, Integer.class),
-              invocation.getArgument(1, String.class));
-          return null;
-        });
 
     // test method
     client.onMethodCall(new MethodCall(IN_METHOD_NAME_DISCONNECT, arguments),
